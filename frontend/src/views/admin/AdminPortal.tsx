@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { CertificatePreview } from '../../components/CertificatePreview';
+import { SidebarBrand, SidebarUser } from '../../components/SidebarSections';
 import {
   Users, UserCheck, BookOpen, Layers, Plus, Calendar, Video, FileText, CheckCircle2, Briefcase,
   Eye, Pencil, X, Download
@@ -471,19 +472,17 @@ export const AdminPortal: React.FC = () => {
   return (
     <div style={{ display: 'flex', flex: 1 }}>
       {/* Sidebar Navigation */}
-      <aside style={{
+      <aside className="sidebar" style={{
         width: '240px',
-        borderRight: '1px solid var(--border-subtle)',
-        background: 'rgba(15, 23, 42, 0.4)',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
       }}>
-        <div style={{ padding: '0 12px 12px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
-          ADMIN MANAGEMENT
-        </div>
+        <SidebarBrand />
 
+        <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+       
         <button
           onClick={() => setActiveTab('dashboard')}
           className={`btn ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
@@ -532,22 +531,20 @@ export const AdminPortal: React.FC = () => {
           <FileText size={16} /> Curriculum (60 Days)
         </button>
 
-        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid var(--border-subtle)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
+        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.18)', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
           EMS ENTERPRISE HR
         </div>
 
         <button
           onClick={() => setActiveTab('ems')}
           className={`btn ${activeTab === 'ems' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{
-            justifyContent: 'flex-start',
-            width: '100%',
-            background: activeTab === 'ems' ? 'linear-gradient(135deg, #6366F1, #8B5CF6)' : undefined,
-            boxShadow: activeTab === 'ems' ? '0 4px 12px rgba(99, 102, 241, 0.35)' : undefined
-          }}
+          style={{ justifyContent: 'flex-start', width: '100%' }}
         >
           <Briefcase size={16} /> Staff & EMS Hub
         </button>
+        </div>
+
+        <SidebarUser />
       </aside>
 
       {/* Main Content Area */}
@@ -556,7 +553,7 @@ export const AdminPortal: React.FC = () => {
           <div style={{
             background: 'var(--success-bg)',
             border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#34D399',
+            color: '#047857',
             padding: '12px 20px',
             borderRadius: '8px',
             marginBottom: '24px',
@@ -1212,7 +1209,7 @@ export const AdminPortal: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(2, 6, 23, 0.78)',
+            background: 'rgba(15, 23, 42, 0.4)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
@@ -1266,7 +1263,7 @@ export const AdminPortal: React.FC = () => {
             </div>
             <div style={{
               padding: '16px',
-              background: '#0b1120',
+              background: '#F1F5F9',
               display: 'flex',
               justifyContent: 'center',
               overflow: 'hidden',
@@ -1286,7 +1283,7 @@ export const AdminPortal: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(2, 6, 23, 0.78)',
+            background: 'rgba(15, 23, 42, 0.4)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',

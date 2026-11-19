@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { CertificatePreview } from '../../components/CertificatePreview';
+import { SidebarBrand, SidebarUser } from '../../components/SidebarSections';
 import {
   Video, Calendar, FileText, Award, Bell, CheckCircle2, ExternalLink,
   BookOpen, MessageSquare, CheckSquare, Clock, Send, Download, Eye, X
@@ -204,31 +205,32 @@ export const StudentPortal: React.FC = () => {
   return (
     <div style={{ display: 'flex', flex: 1 }}>
       {/* Sidebar Navigation */}
-      <aside style={{
+      <aside className="sidebar" style={{
         width: '260px',
-        borderRight: '1px solid var(--border-subtle)',
-        background: 'rgba(15, 23, 42, 0.4)',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
       }}>
-        <div style={{ padding: '0 12px 12px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
-          STUDENT LEARNING PORTAL
-        </div>
+        <SidebarBrand />
+
+        <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ padding: '0 12px 12px', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+            STUDENT LEARNING PORTAL
+          </div>
 
         {/* Batch Info Card */}
         {batchInfo && (
           <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--border-subtle)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
             borderRadius: '8px',
             padding: '12px',
             marginBottom: '12px',
           }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>Active Course</div>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>{batchInfo.course_name}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.65)', textTransform: 'uppercase', fontWeight: 700 }}>Active Course</div>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#FFFFFF' }}>{batchInfo.course_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '2px' }}>
               Batch: {batchInfo.batch_code} • Trainer: {batchInfo.trainer_name}
             </div>
           </div>
@@ -244,6 +246,9 @@ export const StudentPortal: React.FC = () => {
             {tab.icon} {tab.label}
           </button>
         ))}
+        </div>
+
+        <SidebarUser />
       </aside>
 
       {/* Main Learning Hub */}
@@ -252,7 +257,7 @@ export const StudentPortal: React.FC = () => {
           <div style={{
             background: 'var(--success-bg)',
             border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#34D399',
+            color: '#047857',
             padding: '12px 20px',
             borderRadius: '8px',
             marginBottom: '24px',
@@ -559,7 +564,7 @@ export const StudentPortal: React.FC = () => {
                             background: graded ? 'var(--success-bg)' : 'rgba(99, 102, 241, 0.10)',
                             border: `1px solid ${graded ? 'rgba(16, 185, 129, 0.3)' : 'rgba(99, 102, 241, 0.3)'}`,
                           }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: graded ? '#34D399' : '#A5B4FC' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: graded ? '#047857' : 'var(--primary)' }}>
                               <CheckCircle2 size={16} />
                               {graded
                                 ? `Submitted & Graded — ${sub.marks_obtained} marks`
@@ -629,7 +634,7 @@ export const StudentPortal: React.FC = () => {
                             background: graded ? 'var(--success-bg)' : 'rgba(99, 102, 241, 0.10)',
                             border: `1px solid ${graded ? 'rgba(16, 185, 129, 0.3)' : 'rgba(99, 102, 241, 0.3)'}`,
                           }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: graded ? '#34D399' : '#A5B4FC' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: graded ? '#047857' : 'var(--primary)' }}>
                               <CheckCircle2 size={16} />
                               {graded
                                 ? `Submitted & Graded — ${sub.marks_obtained} / ${t.total_marks} marks`
@@ -695,7 +700,7 @@ export const StudentPortal: React.FC = () => {
                     <div key={m.id} style={{
                       padding: '10px 14px',
                       borderRadius: '8px',
-                      background: m.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                      background: m.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(15, 23, 42, 0.04)',
                       border: '1px solid var(--border-subtle)',
                       maxWidth: '75%',
                       alignSelf: m.sender_user_id === user?.user_id ? 'flex-end' : 'flex-start',
@@ -801,7 +806,7 @@ export const StudentPortal: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(2, 6, 23, 0.78)',
+            background: 'rgba(15, 23, 42, 0.4)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
@@ -855,7 +860,7 @@ export const StudentPortal: React.FC = () => {
             </div>
             <div style={{
               padding: '16px',
-              background: '#0b1120',
+              background: '#F1F5F9',
               display: 'flex',
               justifyContent: 'center',
               overflow: 'hidden',

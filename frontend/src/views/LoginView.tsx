@@ -58,7 +58,7 @@ export const LoginView: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
-      background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #090D16 70%)',
+      background: 'radial-gradient(ellipse at top, #E0E7FF 0%, #F4F6FB 65%)',
     }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
         {/* Header Branding */}
@@ -90,7 +90,7 @@ export const LoginView: React.FC = () => {
             <div style={{
               background: 'var(--danger-bg)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#F87171',
+              color: '#DC2626',
               padding: '12px',
               borderRadius: '8px',
               fontSize: '0.85rem',
@@ -144,7 +144,7 @@ export const LoginView: React.FC = () => {
                 marginBottom: '20px',
               }}>
                 <CheckCircle2 size={20} color="var(--success)" />
-                <div style={{ fontSize: '0.825rem', color: '#34D399' }}>
+                <div style={{ fontSize: '0.825rem', color: '#047857' }}>
                   OTP sent to <strong>{mobile}</strong>!
                   {generatedOtp && <span> (Test Code: <strong>{generatedOtp}</strong>)</span>}
                 </div>

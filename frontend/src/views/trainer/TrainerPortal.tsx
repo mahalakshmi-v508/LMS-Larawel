@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { SidebarBrand, SidebarUser } from '../../components/SidebarSections';
 import {
   Video, CheckSquare, FileText, Award, MessageSquare, Bell, Clock, BookOpen,
   ExternalLink, CheckCircle2
@@ -378,18 +379,19 @@ export const TrainerPortal: React.FC = () => {
   return (
     <div style={{ display: 'flex', flex: 1 }}>
       {/* Sidebar */}
-      <aside style={{
+      <aside className="sidebar" style={{
         width: '240px',
-        borderRight: '1px solid var(--border-subtle)',
-        background: 'rgba(15, 23, 42, 0.4)',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
       }}>
+        <SidebarBrand />
+
+        <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {/* Batch Selector */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
             ASSIGNED BATCH
           </label>
           <select
@@ -435,6 +437,9 @@ export const TrainerPortal: React.FC = () => {
         <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-secondary'}`} style={{ justifyContent: 'flex-start' }}>
           <Bell size={16} /> Message Board
         </button>
+        </div>
+
+        <SidebarUser />
       </aside>
 
       {/* Main Area */}
@@ -443,7 +448,7 @@ export const TrainerPortal: React.FC = () => {
           <div style={{
             background: 'var(--success-bg)',
             border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#34D399',
+            color: '#047857',
             padding: '12px 20px',
             borderRadius: '8px',
             marginBottom: '24px',
@@ -1028,7 +1033,7 @@ export const TrainerPortal: React.FC = () => {
                     <div key={m.id} style={{
                       padding: '10px 14px',
                       borderRadius: '8px',
-                      background: m.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      background: m.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.04)',
                       border: '1px solid var(--border-subtle)',
                       maxWidth: '75%',
                       alignSelf: m.sender_role === 'TRAINER' ? 'flex-end' : 'flex-start',

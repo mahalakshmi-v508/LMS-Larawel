@@ -37,7 +37,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certific
         overflow: 'hidden',
         background: '#ffffff',
         borderRadius: '4px',
-        boxShadow: '0 18px 40px rgba(2, 6, 23, 0.45)',
+        boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
         fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
         color: '#111827',
       } as React.CSSProperties}

@@ -287,7 +287,7 @@ export const EmsPortal: React.FC = () => {
       )}
 
       {/* Header Banner */}
-      <div className="glass-card" style={{ padding: '24px', marginBottom: '24px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9))' }}>
+      <div className="glass-card" style={{ padding: '24px', marginBottom: '24px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(255, 255, 255, 0.98))' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
@@ -498,7 +498,7 @@ export const EmsPortal: React.FC = () => {
 
                   {/* LMS Training Badge */}
                   <div style={{
-                    background: emp.current_course_name ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    background: emp.current_course_name ? 'rgba(99, 102, 241, 0.1)' : 'rgba(15, 23, 42, 0.04)',
                     border: `1px solid ${emp.current_course_name ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-subtle)'}`,
                     padding: '10px 12px',
                     borderRadius: '10px',
