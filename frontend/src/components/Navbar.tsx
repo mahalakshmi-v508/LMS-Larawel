@@ -54,7 +54,7 @@ export const Navbar: React.FC<{ activeBatchCode?: string }> = ({ activeBatchCode
           }}>
             <BookOpen size={20} color="#FFFFFF" />
           </div>
-          Custom LMS
+          SkillForge LMS
         </div>
 
         {getRoleBadge()}

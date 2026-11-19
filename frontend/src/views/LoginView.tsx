@@ -77,7 +77,7 @@ export const LoginView: React.FC = () => {
             <GraduationCap size={32} color="#FFFFFF" />
           </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '8px' }}>
-            Welcome to Custom LMS
+            Welcome to SkillForge LMS
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             Sign in using your mobile number and OTP
