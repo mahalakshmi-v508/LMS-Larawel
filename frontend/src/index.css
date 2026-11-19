@@ -232,6 +232,8 @@ body::after {
 .sidebar .btn {
   justify-content: flex-start;
   width: 100%;
+  font-size: 0.875rem;   /* 14px */
+  font-weight: 500;
 }
 
 /* Unselected menu items blend into the colored sidebar */
@@ -253,7 +255,7 @@ body::after {
   background: #FFFFFF;
   border-color: rgba(255, 255, 255, 0.95);
   color: #4338CA;
-  font-weight: 700;
+  font-weight: 600;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
 }
 .sidebar .btn-primary:hover {

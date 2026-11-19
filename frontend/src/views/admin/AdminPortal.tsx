@@ -482,7 +482,7 @@ export const AdminPortal: React.FC = () => {
         <SidebarBrand />
 
         <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-       
+        
         <button
           onClick={() => setActiveTab('dashboard')}
           className={`btn ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
@@ -531,7 +531,7 @@ export const AdminPortal: React.FC = () => {
           <FileText size={16} /> Curriculum (60 Days)
         </button>
 
-        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.18)', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.18)', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
           EMS ENTERPRISE HR
         </div>
 

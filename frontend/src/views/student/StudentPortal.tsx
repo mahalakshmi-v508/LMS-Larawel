@@ -215,7 +215,7 @@ export const StudentPortal: React.FC = () => {
         <SidebarBrand />
 
         <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ padding: '0 12px 12px', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+          <div style={{ padding: '0 12px 12px', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
             STUDENT LEARNING PORTAL
           </div>
 
@@ -228,7 +228,7 @@ export const StudentPortal: React.FC = () => {
             padding: '12px',
             marginBottom: '12px',
           }}>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.65)', textTransform: 'uppercase', fontWeight: 700 }}>Active Course</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.65)', textTransform: 'uppercase', fontWeight: 600 }}>Active Course</div>
             <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#FFFFFF' }}>{batchInfo.course_name}</div>
             <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '2px' }}>
               Batch: {batchInfo.batch_code} • Trainer: {batchInfo.trainer_name}
@@ -241,7 +241,7 @@ export const StudentPortal: React.FC = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`btn ${activeTab === tab.id ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.825rem', padding: '10px 14px' }}
+            style={{ justifyContent: 'flex-start', width: '100%', padding: '10px 14px' }}
           >
             {tab.icon} {tab.label}
           </button>
