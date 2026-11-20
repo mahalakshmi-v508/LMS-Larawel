@@ -391,7 +391,7 @@ export const TrainerPortal: React.FC = () => {
         <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {/* Batch Selector */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.55)', letterSpacing: '0.05em' }}>
             ASSIGNED BATCH
           </label>
           <select

@@ -3,14 +3,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { CertificatePreview } from '../../components/CertificatePreview';
 import { SidebarBrand, SidebarUser } from '../../components/SidebarSections';
+import { useAuth } from '../../context/AuthContext';
 import {
   Users, UserCheck, BookOpen, Layers, Plus, Calendar, Video, FileText, CheckCircle2, Briefcase,
-  Eye, Pencil, X, Download
+  Eye, Pencil, X, Download, Bell, Menu, ChevronDown, GraduationCap, ArrowUpRight, Sparkles
 } from 'lucide-react';
 import { EmsPortal } from '../ems/EmsPortal';
 
 export const AdminPortal: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems'>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => (typeof window === 'undefined' ? true : window.innerWidth > 1024));
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth <= 1024) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Data states
   const [adminStudents, setAdminStudents] = useState<any[]>([]);
@@ -467,12 +478,21 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
+  const goToTab = (tab: 'dashboard' | 'students' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems') => {
+    setActiveTab(tab);
+    if (window.innerWidth <= 1024) setSidebarOpen(false);
+  };
+
   const studentsList = adminStudents;
 
   return (
-    <div style={{ display: 'flex', flex: 1 }}>
+    <div className={`admin-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar" style={{
+      <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`} style={{
         width: '240px',
         padding: '24px 16px',
         display: 'flex',
@@ -484,7 +504,7 @@ export const AdminPortal: React.FC = () => {
         <div className="sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         
         <button
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => goToTab('dashboard')}
           className={`btn ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -492,7 +512,7 @@ export const AdminPortal: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('students')}
+          onClick={() => goToTab('students')}
           className={`btn ${activeTab === 'students' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -500,7 +520,7 @@ export const AdminPortal: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('trainers')}
+          onClick={() => goToTab('trainers')}
           className={`btn ${activeTab === 'trainers' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -508,7 +528,7 @@ export const AdminPortal: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('courses')}
+          onClick={() => goToTab('courses')}
           className={`btn ${activeTab === 'courses' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -516,7 +536,7 @@ export const AdminPortal: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('batches')}
+          onClick={() => goToTab('batches')}
           className={`btn ${activeTab === 'batches' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -524,19 +544,19 @@ export const AdminPortal: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('curriculum')}
+          onClick={() => goToTab('curriculum')}
           className={`btn ${activeTab === 'curriculum' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
           <FileText size={16} /> Curriculum (60 Days)
         </button>
 
-        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.18)', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+        <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.14)', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.55)', letterSpacing: '0.05em' }}>
           EMS ENTERPRISE HR
         </div>
 
         <button
-          onClick={() => setActiveTab('ems')}
+          onClick={() => goToTab('ems')}
           className={`btn ${activeTab === 'ems' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
@@ -548,19 +568,41 @@ export const AdminPortal: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+      <div className="admin-main">
+        <header className="admin-topbar">
+          <button
+            type="button"
+            className="topbar-icon-btn"
+            aria-label="Toggle sidebar"
+            aria-expanded={sidebarOpen}
+            title="Toggle sidebar"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+          >
+            <Menu size={19} />
+          </button>
+
+          <div className="topbar-spacer" />
+
+          <button type="button" className="topbar-icon-btn" aria-label="Notifications" title="Notifications">
+            <Bell size={18} />
+            <span className="notif-badge" />
+          </button>
+
+          <div className="topbar-user" title={user?.name}>
+            <span className="topbar-avatar">
+              {(user?.name || 'A').trim().charAt(0).toUpperCase()}
+            </span>
+            <div className="topbar-user-meta">
+              <span className="topbar-name">{user?.name || 'Admin'}</span>
+              <span className="topbar-role">Administrator</span>
+            </div>
+            <ChevronDown size={16} className="topbar-chevron" />
+          </div>
+        </header>
+
+        <main className="admin-content">
         {notification && (
-          <div style={{
-            background: 'var(--success-bg)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#047857',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-          }}>
+          <div className="notice-toast">
             <CheckCircle2 size={18} />
             {notification}
           </div>
@@ -568,80 +610,115 @@ export const AdminPortal: React.FC = () => {
 
         {/* 1. DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px' }}>System Overview</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Students</span>
-                  <Users size={20} color="var(--primary)" />
+          <div className="dash">
+            <section className="welcome-banner">
+              <div className="welcome-copy">
+                <span className="welcome-eyebrow">
+                  <Sparkles size={13} /> Admin Dashboard
+                </span>
+                <h1 className="welcome-title">Welcome Back, Admin!</h1>
+                <p className="welcome-subtitle">
+                  Here's a quick overview of your students, trainers, courses and batches — all in one place.
+                </p>
+                <div className="welcome-chips">
+                  <span className="welcome-chip"><Users size={14} /> {studentsList.length} Students</span>
+                  <span className="welcome-chip"><Layers size={14} /> {batches.length} Batches</span>
+                  <span className="welcome-chip"><BookOpen size={14} /> {courses.length} Courses</span>
                 </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800 }}>{studentsList.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: '4px' }}>Batch-based enrollment</div>
               </div>
+              <div className="welcome-art" aria-hidden="true">
+                <span className="welcome-blob welcome-blob-1" />
+                <span className="welcome-blob welcome-blob-2" />
+                <div className="welcome-illustration">
+                  <GraduationCap size={68} strokeWidth={1.5} />
+                </div>
+              </div>
+            </section>
 
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Active Batches</span>
-                  <Layers size={20} color="var(--secondary)" />
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800 }}>{batches.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>Running concurrently</div>
-              </div>
-
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Trainers</span>
-                  <UserCheck size={20} color="var(--warning)" />
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800 }}>{trainers.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>Assigned to batches</div>
-              </div>
-
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Courses</span>
-                  <BookOpen size={20} color="var(--info)" />
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800 }}>{courses.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>60-Day Curriculums</div>
-              </div>
+            <div className="dash-section-head">
+              <span className="accent-bar" />
+              <h2 className="dash-section-title">System Overview</h2>
             </div>
 
-            {/* Quick Summary Tables */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Active Batches</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {batches.map((b) => (
-                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>Batch {b.batch_code}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{b.course_name} • Trainer: {b.trainer_name}</div>
-                      </div>
-                      <span className="badge badge-success">ACTIVE</span>
-                    </div>
-                  ))}
+            <div className="stats-grid">
+              {[
+                { label: 'Total Students', value: studentsList.length, sub: 'Batch-based enrollment', tone: 'purple', icon: <Users size={22} /> },
+                { label: 'Active Batches', value: batches.length, sub: 'Running concurrently', tone: 'peach', icon: <Layers size={22} /> },
+                { label: 'Trainers', value: trainers.length, sub: 'Assigned to batches', tone: 'mint', icon: <UserCheck size={22} /> },
+                { label: 'Courses', value: courses.length, sub: '60-Day Curriculums', tone: 'pink', icon: <BookOpen size={22} /> },
+              ].map((card) => (
+                <div key={card.label} className={`stat-card tone-${card.tone}`}>
+                  <span className="stat-icon">{card.icon}</span>
+                  <div className="stat-value">{card.value}</div>
+                  <div className="stat-label">{card.label}</div>
+                  <div className="stat-sub">{card.sub}</div>
+                  <span className="stat-arrow"><ArrowUpRight size={15} /></span>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <div className="glass-card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Available Courses</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {courses.map((c) => (
-                    <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{c.course_name}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Duration: {c.duration_days || 60} Days</div>
-                      </div>
-                      <button onClick={() => { setSelectedCourseId(c.id); setActiveTab('curriculum'); }} className="btn btn-secondary btn-sm">
-                        View Days
-                      </button>
-                    </div>
-                  ))}
+            {/* Quick Summary Panels */}
+            <div className="dash-grid">
+              <section className="panel">
+                <div className="panel-head">
+                  <div className="panel-title-wrap">
+                    <span className="accent-bar" />
+                    <h3 className="panel-title">Active Batches</h3>
+                  </div>
+                  <button type="button" className="view-all-btn" onClick={() => goToTab('batches')}>
+                    View All <ArrowUpRight size={14} />
+                  </button>
                 </div>
-              </div>
+                <div className="panel-list">
+                  {batches.length === 0 ? (
+                    <div className="panel-empty">No active batches yet.</div>
+                  ) : (
+                    batches.map((b) => (
+                      <div key={b.id} className="panel-row">
+                        <span className="row-icon row-icon-purple"><Layers size={18} /></span>
+                        <div className="row-text">
+                          <div className="row-title">Batch {b.batch_code}</div>
+                          <div className="row-meta">{b.course_name} • Trainer: {b.trainer_name}</div>
+                        </div>
+                        <span className="badge badge-success">ACTIVE</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section className="panel">
+                <div className="panel-head">
+                  <div className="panel-title-wrap">
+                    <span className="accent-bar" />
+                    <h3 className="panel-title">Available Courses</h3>
+                  </div>
+                  <button type="button" className="view-all-btn" onClick={() => goToTab('courses')}>
+                    View All <ArrowUpRight size={14} />
+                  </button>
+                </div>
+                <div className="panel-list">
+                  {courses.length === 0 ? (
+                    <div className="panel-empty">No courses available yet.</div>
+                  ) : (
+                    courses.map((c) => (
+                      <div key={c.id} className="panel-row">
+                        <span className="row-icon row-icon-pink"><BookOpen size={18} /></span>
+                        <div className="row-text">
+                          <div className="row-title">{c.course_name}</div>
+                          <div className="row-meta">Duration: {c.duration_days || 60} Days</div>
+                        </div>
+                        <button
+                          onClick={() => { setSelectedCourseId(c.id); setActiveTab('curriculum'); }}
+                          className="view-all-btn"
+                        >
+                          View Days
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
             </div>
           </div>
         )}
@@ -1200,7 +1277,8 @@ export const AdminPortal: React.FC = () => {
 
         {/* Tab 7: Employee Management System (EMS) */}
         {activeTab === 'ems' && <EmsPortal />}
-      </main>
+        </main>
+      </div>
 
       {/* Certificate preview modal */}
       {previewCertificate && (

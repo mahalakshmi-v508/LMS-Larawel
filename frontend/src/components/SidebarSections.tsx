@@ -4,9 +4,22 @@ import { useAuth } from '../context/AuthContext';
 import { GraduationCap, LogOut, Shield, UserCheck, BookOpen, Layers } from 'lucide-react';
 
 const softBadge: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.14)',
-  border: '1px solid rgba(255, 255, 255, 0.25)',
+  background: 'rgba(255, 255, 255, 0.12)',
+  border: '1px solid rgba(255, 255, 255, 0.22)',
   color: '#FFFFFF',
+};
+
+const roleLabel = (role?: string | null) => {
+  switch (role) {
+    case 'ADMIN':
+      return 'Administrator';
+    case 'TRAINER':
+      return 'Trainer';
+    case 'STUDENT':
+      return 'Student';
+    default:
+      return 'Member';
+  }
 };
 
 /** Brand + Active Portal badge + Active Batch chip (moved from Navbar) */
@@ -30,19 +43,20 @@ export const SidebarBrand: React.FC = () => {
     <div style={{ padding: '0 4px', marginBottom: '18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
         <div style={{
-          background: '#FFFFFF',
-          padding: '7px',
-          borderRadius: '10px',
+          background: 'linear-gradient(135deg, #F3E5FF 0%, #FCE4F1 100%)',
+          padding: '8px',
+          borderRadius: '12px',
           display: 'flex',
-          boxShadow: '0 6px 16px rgba(15, 23, 42, 0.2)',
+          border: '1px solid rgba(232, 62, 155, 0.16)',
+          boxShadow: '0 6px 16px rgba(232, 62, 155, 0.14)',
         }}>
-          <BookOpen size={20} color="#4F46E5" />
+          <BookOpen size={20} color="#4B087D" />
         </div>
         <div style={{
           fontWeight: 800,
           fontSize: '1.15rem',
           letterSpacing: '-0.02em',
-          background: 'linear-gradient(135deg, #FFFFFF, #C7D2FE)',
+          background: 'linear-gradient(135deg, #FFFFFF, #FBD6EA)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
         }}>
@@ -60,12 +74,12 @@ export const SidebarBrand: React.FC = () => {
             gap: '6px',
             background: 'rgba(255, 255, 255, 0.1)',
             padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.8rem',
-            color: 'rgba(255, 255, 255, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
+            borderRadius: '8px',
+            fontSize: '0.78rem',
+            color: 'rgba(255, 255, 255, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
           }}>
-            <Layers size={13} color="#C7D2FE" />
+            <Layers size={13} color="#F9A8D4" />
             Batch: <strong style={{ color: '#FFFFFF' }}>{user.batch_code}</strong>
           </div>
         )}
@@ -76,18 +90,37 @@ export const SidebarBrand: React.FC = () => {
 
 /** User profile + Logout (moved from Navbar) */
 export const SidebarUser: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
   if (!user) return null;
+
+  const initial = (user.name || 'U').trim().charAt(0).toUpperCase();
 
   return (
     <div style={{
       marginTop: 'auto',
       paddingTop: '16px',
-      borderTop: '1px solid rgba(255, 255, 255, 0.16)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.14)',
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
     }}>
+      <div style={{
+        width: '38px',
+        height: '38px',
+        borderRadius: '50%',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #EDDCFF, #FBD6EA)',
+        color: '#4B087D',
+        fontWeight: 800,
+        fontSize: '0.95rem',
+        border: '1px solid rgba(75, 8, 125, 0.12)',
+      }}>
+        {initial}
+      </div>
+
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: '0.85rem',
@@ -96,11 +129,11 @@ export const SidebarUser: React.FC = () => {
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-        }}>
+        }} title={user.name}>
           {user.name}
         </div>
-        <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.65)' }}>
-          {user.mobile_number}
+        <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }} title={user.mobile_number}>
+          {roleLabel(role)}
         </div>
       </div>
 
@@ -111,10 +144,10 @@ export const SidebarUser: React.FC = () => {
         aria-label="Logout"
         style={{
           padding: '8px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.22)',
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: '#FFFFFF',
+          borderRadius: '10px',
+          border: '1px solid rgba(232, 62, 155, 0.35)',
+          background: 'rgba(252, 228, 241, 0.14)',
+          color: '#FFB3D9',
           cursor: 'pointer',
           display: 'flex',
           transition: 'var(--transition)',
