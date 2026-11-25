@@ -44,6 +44,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
+  // --- PUBLIC WEBSITE ---
+  submitEnquiry: (data: { name: string; email?: string; mobile_number: string; course_interest: string; message?: string }) =>
+    request('/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // --- 1. AUTHENTICATION (OTP) ---
   sendOtp: (mobile_number: string) =>
     request('/auth/send-otp', {

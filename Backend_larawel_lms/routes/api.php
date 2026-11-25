@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BatchController;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\Ems\EmsAttendanceController;
 use App\Http\Controllers\Api\Ems\EmsDepartmentController;
 use App\Http\Controllers\Api\Ems\EmsDesignationController;
@@ -32,6 +33,9 @@ use Illuminate\Support\Facades\Route;
 // 1. Authentication (mobile + OTP)
 Route::post('auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
+
+// Public website
+Route::post('enquiries', [EnquiryController::class, 'store']);
 
 // 2. Users, students and trainers
 Route::get('users', [UserController::class, 'index']);

@@ -4,7 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Smartphone, KeyRound, ArrowRight, GraduationCap, CheckCircle2 } from 'lucide-react';
 
-export const LoginView: React.FC = () => {
+interface LoginViewProps {
+  onBack?: () => void;
+}
+
+export const LoginView: React.FC<LoginViewProps> = ({ onBack }) => {
   const { loginWithOtp } = useAuth();
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -58,9 +62,19 @@ export const LoginView: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
-      background: 'radial-gradient(ellipse at top, #E0E7FF 0%, #F4F6FB 65%)',
+      background: 'radial-gradient(ellipse at top, #FFF0CE 0%, #FFF9F0 68%)',
     }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
+        {onBack && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onBack}
+            style={{ marginBottom: '20px' }}
+          >
+            ← Back to website
+          </button>
+        )}
         {/* Header Branding */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
@@ -70,8 +84,8 @@ export const LoginView: React.FC = () => {
             width: '56px',
             height: '56px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-            boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
+            background: 'linear-gradient(135deg, #650B2B, #8B1639)',
+            boxShadow: '0 8px 24px rgba(101, 11, 43, 0.28)',
             marginBottom: '16px',
           }}>
             <GraduationCap size={32} color="#FFFFFF" />

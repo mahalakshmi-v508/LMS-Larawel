@@ -43,20 +43,20 @@ export const SidebarBrand: React.FC = () => {
     <div style={{ padding: '0 4px', marginBottom: '18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
         <div style={{
-          background: 'linear-gradient(135deg, #F3E5FF 0%, #FCE4F1 100%)',
+          background: 'linear-gradient(135deg, #FFF4DE 0%, #FCE9B9 100%)',
           padding: '8px',
           borderRadius: '12px',
           display: 'flex',
-          border: '1px solid rgba(232, 62, 155, 0.16)',
-          boxShadow: '0 6px 16px rgba(232, 62, 155, 0.14)',
+          border: '1px solid rgba(233, 165, 43, 0.28)',
+          boxShadow: '0 6px 16px rgba(233, 165, 43, 0.18)',
         }}>
-          <BookOpen size={20} color="#4B087D" />
+          <BookOpen size={20} color="#650B2B" />
         </div>
         <div style={{
           fontWeight: 800,
           fontSize: '1.15rem',
           letterSpacing: '-0.02em',
-          background: 'linear-gradient(135deg, #FFFFFF, #FBD6EA)',
+          background: 'linear-gradient(135deg, #FFFFFF, #FFE8B0)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
         }}>
@@ -112,11 +112,11 @@ export const SidebarUser: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #EDDCFF, #FBD6EA)',
-        color: '#4B087D',
+        background: 'linear-gradient(135deg, #FFE8B0, #F4BE59)',
+        color: '#650B2B',
         fontWeight: 800,
         fontSize: '0.95rem',
-        border: '1px solid rgba(75, 8, 125, 0.12)',
+        border: '1px solid rgba(101, 11, 43, 0.12)',
       }}>
         {initial}
       </div>
@@ -145,9 +145,9 @@ export const SidebarUser: React.FC = () => {
         style={{
           padding: '8px',
           borderRadius: '10px',
-          border: '1px solid rgba(232, 62, 155, 0.35)',
-          background: 'rgba(252, 228, 241, 0.14)',
-          color: '#FFB3D9',
+          border: '1px solid rgba(233, 165, 43, 0.4)',
+          background: 'rgba(252, 233, 185, 0.14)',
+          color: '#FFD77A',
           cursor: 'pointer',
           display: 'flex',
           transition: 'var(--transition)',
