@@ -1,6 +1,5 @@
 // src/components/CertificatePreview.tsx
-// Renders a certificate as HTML that keeps the exact A4-landscape look of the
-// generated PDF, scaled to whatever width it is given (no scrolling needed).
+// Renders certificate details over the supplied A4-landscape frame.
 import React from 'react';
 
 export interface CertificatePreviewData {
@@ -42,18 +41,26 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certific
         color: '#111827',
       } as React.CSSProperties}
     >
-      {/* Indigo double border (same as the PDF) */}
-      <div style={{ position: 'absolute', inset: '3.2%', border: '0.42cqw solid #4338ca' }} />
-      <div style={{ position: 'absolute', inset: '4.6%', border: '0.14cqw solid #a5b4fc' }} />
+      <img
+        src="/PCS-Outer-Frame.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
 
       <div
         style={{
           position: 'absolute',
-          inset: '6%',
+          top: '17%',
+          left: '14%',
+          right: '10%',
+          bottom: '13%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
+          zIndex: 1,
         }}
       >
         <div
@@ -114,14 +121,15 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certific
       <div
         style={{
           position: 'absolute',
-          left: '7.5%',
-          right: '7.5%',
-          bottom: '6.5%',
+          left: '14%',
+          right: '16%',
+          bottom: '11%',
           display: 'flex',
           justifyContent: 'space-between',
           gap: '4%',
           fontSize: '1.3cqw',
           color: '#334155',
+          zIndex: 1,
         }}
       >
         <span>Issued: {issuedText}</span>
