@@ -5,12 +5,18 @@ import {
   BookOpenCheck,
   CheckCircle2,
   GraduationCap,
+  Headphones,
   Laptop2,
   Mail,
   MapPin,
   Menu,
   Phone,
+  Play,
+  Search,
   Sparkles,
+  Star,
+  Trophy,
+  Clock3,
   Users,
   X,
 } from 'lucide-react';
@@ -63,8 +69,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
 
         <nav className={`public-nav ${menuOpen ? 'public-nav-open' : ''}`} aria-label="Main navigation">
           <button className={page === 'home' ? 'active' : ''} onClick={() => { navigate('home'); setMenuOpen(false); }}>Home</button>
+          <button onClick={() => { navigate('enquiry'); setMenuOpen(false); }}>Courses⌄</button>
           <button className={page === 'about' ? 'active' : ''} onClick={() => { navigate('about'); setMenuOpen(false); }}>About Us</button>
-          <button className={page === 'enquiry' ? 'active' : ''} onClick={() => { navigate('enquiry'); setMenuOpen(false); }}>Enquiry</button>
+          <button onClick={() => { document.querySelector('.public-courses-section')?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false); }}>Features⌄</button>
+          <button className={page === 'enquiry' ? 'active' : ''} onClick={() => { navigate('enquiry'); setMenuOpen(false); }}>Contact</button>
+          <div className="public-search"><Search size={15}/><span>Search courses...</span></div>
           <button className="public-login" onClick={() => { window.open('/login', '_blank', 'noopener,noreferrer'); setMenuOpen(false); }}>Login</button>
         </nav>
 
@@ -77,55 +86,50 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
         <main>
           <section className="public-hero">
             <div className="public-hero-copy">
-              <span className="public-eyebrow"><Sparkles size={15} /> Learn. Practice. Advance.</span>
-              <h1>Build skills that open <em>real opportunities.</em></h1>
-              <p>Industry-focused learning, expert mentors and practical projects—all in one powerful LMS experience.</p>
+              <span className="public-eyebrow"><GraduationCap size={15} /> Learn · Practice · Grow</span>
+              <h1>Your Learning<br />Journey <em>Starts Here!</em></h1>
+              <p>Access high-quality courses, learn at your own pace and build a better future with SkillForge LMS.</p>
               <div className="public-hero-actions">
                 <button className="public-primary-button" onClick={() => navigate('enquiry')}>Explore Courses <ArrowRight size={18} /></button>
-                <button className="public-secondary-button" onClick={() => navigate('about')}>About SkillForge</button>
+                <button className="public-secondary-button"><Play size={15} fill="currentColor" /> Watch Demo</button>
               </div>
               <div className="public-trust">
-                <span><strong>30+</strong> Learning modules</span>
-                <span><strong>Live</strong> Expert sessions</span>
-                <span><strong>100%</strong> Practical training</span>
+                <span><strong>10K+</strong> Active Learners</span>
+                <span><strong>500+</strong> Courses</span>
+                <span><strong>95%</strong> Satisfaction Rate</span>
               </div>
             </div>
-            <div className="public-hero-visual" aria-label="Learning dashboard preview">
-              <div className="public-orbit orbit-one" />
-              <div className="public-orbit orbit-two" />
-              <div className="public-dashboard">
-                <div className="public-dashboard-top"><span /><span /><span /></div>
-                <div className="public-dashboard-body">
-                  <div className="public-dashboard-sidebar">
-                    {[1, 2, 3, 4].map((item) => <span key={item} />)}
-                  </div>
-                  <div className="public-dashboard-content">
-                    <div className="public-course-card">
-                      <div className="public-course-icon"><Laptop2 size={28} /></div>
-                      <div><small>Current course</small><strong>Full Stack Development</strong></div>
-                    </div>
-                    <div className="public-progress"><span><b>Course progress</b><b>68%</b></span><div><i /></div></div>
-                    <div className="public-mini-cards">
-                      <span><BookOpenCheck size={18} /><strong>12</strong><small>Lessons</small></span>
-                      <span><Award size={18} /><strong>8</strong><small>Completed</small></span>
-                      <span><Users size={18} /><strong>24</strong><small>Students</small></span>
-                    </div>
-                  </div>
-                </div>
+            <div className="public-hero-visual" aria-label="Student learning online">
+              <div className="hero-blob"/>
+              <div className="hero-spark spark-one">✦</div>
+              <div className="hero-spark spark-two">✦</div>
+              <div className="student-illustration">
+                <div className="student-hair"/>
+                <div className="student-head"><span className="student-eye left"/><span className="student-eye right"/><span className="student-smile"/></div>
+                <div className="student-body"/>
+                <div className="student-arm left"/>
+                <div className="student-arm right"/>
+                <div className="student-laptop"><span>&lt;/&gt;</span></div>
+                <div className="student-book"/>
               </div>
+              <div className="floating-icon floating-video"><Play size={22} fill="currentColor"/></div>
+              <div className="floating-icon floating-book"><BookOpenCheck size={25}/></div>
+              <div className="floating-icon floating-award"><Award size={25}/></div>
+              <div className="floating-cap"><span/></div>
             </div>
           </section>
 
           <section className="public-feature-section">
             <div className="public-section-heading">
               <span>WHY CHOOSE US</span>
-              <h2>Learning designed around your growth</h2>
+              <h2>Learn Smarter, Achieve Bigger</h2>
             </div>
             <div className="public-feature-grid">
               {[
-                [BookOpenCheck, 'Structured Courses', 'Follow clear, step-by-step learning paths built for career-ready skills.'],
-                [Laptop2, 'Live Learning', 'Join expert-led classes, complete projects and learn at your pace.'],
-                [Award, 'Career Focused', 'Build a strong portfolio and earn certificates for your achievements.'],
+                [Play, 'Interactive Courses', 'Engage with video lessons, quizzes and projects.'],
+                [Laptop2, 'Flexible Learning', 'Study anytime, anywhere on any device.'],
+                [Award, 'Expert Instructors', 'Learn from industry experts and professionals.'],
+                [Headphones, 'Dedicated Support', 'Get help whenever you need it.'],
               ].map(([Icon, title, text]) => (
                 <article className="public-feature-card" key={String(title)}>
                   <span className="public-feature-icon">{React.createElement(Icon as React.ElementType, { size: 24 })}</span>
@@ -136,9 +140,77 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
             </div>
           </section>
 
+          <section className="public-courses-section">
+            <div className="public-courses-copy">
+              <span>POPULAR COURSES</span>
+              <h2>Explore Our<br/>Top Courses</h2>
+              <p>Discover a wide range of courses from beginner to advanced level.</p>
+              <button className="public-primary-button" onClick={() => navigate('enquiry')}>Browse All Courses</button>
+            </div>
+            <div className="public-course-grid">
+              {[
+                ['Web Development', 'Basics', '4.8', '8h 30m', '24 lessons', 'code'],
+                ['Data Science', 'Intermediate', '4.7', '10h 20m', '30 lessons', 'python'],
+                ['UI/UX Design', 'Beginner', '4.8', '7h 15m', '20 lessons', 'design'],
+              ].map(([title, level, rating, duration, lessons, kind]) => (
+                <article className="public-top-course-card" key={title}>
+                  <div className={`course-cover cover-${kind}`}>
+                    <span className="course-level">{level}</span>
+                    {kind === 'code' ? <><b>&lt;/&gt;</b><Laptop2 size={54}/></> : kind === 'python' ? <><b>Py</b><Laptop2 size={54}/></> : <><b>UI</b><Laptop2 size={54}/></>}
+                  </div>
+                  <div className="public-course-card-body">
+                    <h3>{title}</h3>
+                    <div className="course-meta"><Star size={15} fill="#f4aa2b" color="#f4aa2b"/><strong>{rating}</strong><small>(Reviews)</small></div>
+                    <div className="course-bottom"><span><Clock3 size={14}/>{duration}</span><span><BookOpenCheck size={14}/>{lessons}</span></div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="public-success-section">
+            <div className="success-illustration">
+              <div className="success-plant left"/>
+              <div className="success-book"/>
+              <div className="success-cap"><span/></div>
+              <div className="success-bulb"><Sparkles size={32}/></div>
+            </div>
+            <div className="success-copy">
+              <span>ABOUT EDULEARN</span>
+              <h2>A Platform Built for<br/>Your Success</h2>
+              <p>EduLearn is more than just a learning platform. It is a community of learners, creators and dreamers. Join us and unlock your potential with the best learning resources.</p>
+              <button className="public-primary-button" onClick={() => navigate('about')}>Know More <ArrowRight size={16}/></button>
+            </div>
+            <div className="success-stats">
+              <div><Users size={23}/><strong>50K+</strong><small>Students</small></div>
+              <div><Laptop2 size={23}/><strong>1K+</strong><small>Courses</small></div>
+              <div><Trophy size={23}/><strong>98%</strong><small>Success Rate</small></div>
+              <div><Star size={23}/><strong>4.9/5</strong><small>User Rating</small></div>
+            </div>
+          </section>
+
+          <section className="public-testimonials">
+            <span>TESTIMONIALS</span>
+            <h2>What Our Learners Say</h2>
+            <div className="testimonial-grid">
+              {[
+                ['Priya S.', 'Software Engineer', 'EduLearn helped me upgrade my skills and get a better job!'],
+                ['Arun K.', 'Data Scientist', 'Amazing platform with easy learning and great support.'],
+                ['Sneha M.', 'Web Developer', 'The best LMS I have ever used. Highly recommended!'],
+              ].map(([name, role, quote]) => (
+                <article key={name}>
+                  <div className="testimonial-avatar">{name[0]}</div>
+                  <div><p>“{quote}”</p><strong>{name}</strong><small>{role}</small></div>
+                  <div className="testimonial-stars">★★★★★</div>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section className="public-cta">
-            <div><span>START YOUR JOURNEY</span><h2>Ready to upgrade your skills?</h2></div>
-            <button className="public-primary-button" onClick={() => navigate('enquiry')}>Send an Enquiry <ArrowRight size={18} /></button>
+            <div className="cta-trophy"><Trophy size={30}/></div>
+            <div><h2>Ready to start learning?</h2><p>Join thousands of learners and take the next step in your career.</p></div>
+            <button className="public-primary-button" onClick={() => navigate('enquiry')}>Get Started Free <ArrowRight size={17}/></button>
           </section>
         </main>
       )}
@@ -225,12 +297,19 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
       )}
 
       <footer className="public-footer">
-        <button className="public-brand footer-brand" type="button" onClick={() => navigate('home')}>
-          <span className="public-brand-mark"><GraduationCap size={24} /></span>
-          <span><strong>SkillForge</strong><small>LMS Academy</small></span>
-        </button>
-        <p>Practical learning for a confident future.</p>
-        <div><button onClick={() => navigate('home')}>Home</button><button onClick={() => navigate('about')}>About</button><button onClick={() => navigate('enquiry')}>Enquiry</button></div>
+        <div className="footer-grid">
+          <div className="footer-brand-block">
+            <button className="public-brand footer-brand" type="button" onClick={() => navigate('home')}>
+              <span className="public-brand-mark"><GraduationCap size={24} /></span>
+              <span><strong>EduLearn</strong><small>LMS Platform</small></span>
+            </button>
+          </div>
+          <div><h3>Quick Links</h3><button onClick={() => navigate('home')}>Home</button><button onClick={() => navigate('enquiry')}>Courses</button><button onClick={() => navigate('about')}>About</button></div>
+          <div><h3>Support</h3><button>FAQs</button><button>Help Center</button><button>Terms of Service</button></div>
+          <div><h3>Contact Us</h3><button><Mail size={12}/> support@edulearn.com</button><button><Phone size={12}/> +91 98765 43210</button></div>
+          <div className="footer-social"><h3>Follow Us</h3><span>f</span><span>▶</span><span>in</span><span>◆</span></div>
+        </div>
+        <div className="footer-bottom"><span>© 2026 EduLearn. All rights reserved.</span><span>Learn Today · Lead Tomorrow</span></div>
       </footer>
     </div>
   );

@@ -1,7 +1,5 @@
 // src/components/CertificatePreview.tsx
-// Renders a certificate as HTML that keeps the exact A4-landscape look of the
-// generated PDF (navy / teal / pink template), scaled to whatever width it is
-// given (no scrolling needed).
+// Renders certificate details over the supplied A4-landscape frame.
 import React from 'react';
 
 export interface CertificatePreviewData {
@@ -48,10 +46,39 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certific
         color: '#1B1738',
       } as React.CSSProperties}
     >
-      {/* ---- Left colour column ---- */}
-      <div style={{ position: 'absolute', left: 0, top: 0, width: '11.8%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: '15.5%', background: PINK, position: 'relative' }}>
-          <div style={{ position: 'absolute', left: '26%', top: '24%', width: '48%', height: '48%', borderRadius: '50%', border: '0.75cqw solid #FFFFFF', opacity: 0.95 }} />
+      <img
+        src="/PCS-Outer-Frame.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
+
+      <div
+        style={{
+          position: 'absolute',
+          top: '17%',
+          left: '14%',
+          right: '10%',
+          bottom: '13%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            marginTop: '2.6cqw',
+            fontSize: '2.15cqw',
+            fontWeight: 800,
+            letterSpacing: '0.42cqw',
+            color: '#4338ca',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          CERTIFICATE OF COMPLETION
         </div>
         <div style={{ height: '22%', background: TEAL, position: 'relative' }}>
           <div style={{ position: 'absolute', left: '14%', top: '12%', width: '72%', height: '72%', borderRadius: '50%', border: '1.05cqw solid ' + NAVY }} />
@@ -100,15 +127,16 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certific
       <div
         style={{
           position: 'absolute',
-          left: '11.8%',
-          top: '13.5%',
-          right: '1.6%',
-          bottom: '-2%',
+          left: '14%',
+          right: '16%',
+          bottom: '11%',
+          display: 'flex',
           background: PANEL,
-          borderTopLeftRadius: '9.2cqw',
-          borderBottomRightRadius: '11cqw',
-          boxShadow: 'inset 0 0 0 0.12cqw rgba(36, 29, 94, 0.08)',
-          overflow: 'hidden',
+          justifyContent: 'space-between',
+          gap: '4%',
+          fontSize: '1.3cqw',
+          color: '#334155',
+          zIndex: 1,
         }}
       >
         <div
