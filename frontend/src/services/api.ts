@@ -16,6 +16,8 @@ export interface User {
   user_id: number;
   id?: number;
   name: string;
+  email?: string;
+  account_id?: string;
   mobile_number: string;
   role: 'ADMIN' | 'TRAINER' | 'STUDENT';
   is_active: boolean;
@@ -63,6 +65,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ mobile_number, otp_code }),
     }),
+  loginStudentWithAccount: (account_id: string, email: string) =>
+    request<User>('/auth/student-login', {
+      method: 'POST',
+      body: JSON.stringify({ account_id, email }),
+    }),
 
   // --- 2. USERS & PROFILES ---
   getUsers: () => request<any[]>('/users'),
@@ -71,6 +78,9 @@ export const api = {
 
   getStudents: () => request<any[]>('/users'), // filter role STUDENT
   getAdminStudents: () => request<any[]>('/admin/students'),
+  getAdminEnquiries: () => request<any[]>('/admin/enquiries'),
+  approveEnquiry: (id: number) => request<{ account_id: string; email: string }>(`/admin/enquiries/${id}/approve`, { method: 'POST' }),
+  rejectEnquiry: (id: number) => request(`/admin/enquiries/${id}/reject`, { method: 'POST' }),
   getStudentById: (id: number) => request<any>(`/students/${id}`),
   createStudent: (data: { user_id: number; joining_date: string; certification_status?: string }) =>
     request('/students', { method: 'POST', body: JSON.stringify(data) }),

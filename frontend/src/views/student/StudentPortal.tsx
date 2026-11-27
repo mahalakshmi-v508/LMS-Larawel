@@ -39,7 +39,7 @@ export const StudentPortal: React.FC = () => {
 
   const [notice, setNotice] = useState('');
 
-  const batchId = selectedBatchId || user?.batch_id || 2;
+  const batchId = selectedBatchId || user?.batch_id;
 
   const showNotice = (msg: string) => {
     setNotice(msg);
@@ -106,16 +106,15 @@ export const StudentPortal: React.FC = () => {
 
   // Load Student Attendance & Certificates
   useEffect(() => {
-    const studentId = user?.student_id || 2;
-    if (studentId) {
-      api.getStudentAttendance(studentId).then((res) => {
-        if (res.success) setAttendanceData(res);
-      });
-      api.getStudentCertificates(studentId).then((res) => {
-        if (res.success && res.data) setCertificates(res.data);
-      });
-      loadMySubmissions(studentId);
-    }
+    const studentId = user?.student_id;
+    if (!studentId) return;
+    api.getStudentAttendance(studentId).then((res) => {
+      if (res.success) setAttendanceData(res);
+    });
+    api.getStudentCertificates(studentId).then((res) => {
+      if (res.success && res.data) setCertificates(res.data);
+    });
+    loadMySubmissions(studentId);
   }, [user?.student_id]);
 
   // Load this student's own submissions (assignments + tests) so marks/feedback are visible
@@ -131,7 +130,8 @@ export const StudentPortal: React.FC = () => {
   };
 
   const handleSubmitAssignment = async (assignmentId: number) => {
-    const studentId = user?.student_id || 2;
+    const studentId = user?.student_id;
+    if (!studentId) return;
     const existing = myAssignmentSubmissions[assignmentId];
     const url = window.prompt(
       existing
@@ -153,7 +153,8 @@ export const StudentPortal: React.FC = () => {
   };
 
   const handleSubmitTest = async (testId: number) => {
-    const studentId = user?.student_id || 2;
+    const studentId = user?.student_id;
+    if (!studentId) return;
     const existing = myTestSubmissions[testId];
     const url = window.prompt(
       existing
@@ -177,8 +178,10 @@ export const StudentPortal: React.FC = () => {
   const handleSendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatRoom?.id || !newChatMessage.trim()) return;
+    const senderUserId = user?.user_id || user?.id;
+    if (!senderUserId) return;
     const res = await api.sendChatMessage(chatRoom.id, {
-      sender_user_id: user?.id || user?.user_id || 3,
+      sender_user_id: senderUserId,
       message: newChatMessage,
     });
     if (res.success) {
@@ -266,6 +269,12 @@ export const StudentPortal: React.FC = () => {
             gap: '10px',
           }}>
             <CheckCircle2 size={18} /> {notice}
+          </div>
+        )}
+
+        {!batchId && (
+          <div className="glass-card" style={{ padding: '16px 20px', marginBottom: '24px', color: 'var(--text-muted)' }}>
+            Your account is ready. An administrator will assign you to a batch before course materials and live classes are available.
           </div>
         )}
 

@@ -6,8 +6,9 @@ interface AuthContextType {
   user: User | null;
   role: 'ADMIN' | 'TRAINER' | 'STUDENT' | null;
   selectedBatchId: number | null;
-  setSelectedBatchId: (id: number) => void;
+  setSelectedBatchId: (id: number | null) => void;
   loginWithOtp: (mobile: string, otp: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithStudentAccount: (accountId: string, email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
 
@@ -44,21 +45,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (selectedBatchId) {
       localStorage.setItem('lms_selected_batch', String(selectedBatchId));
+    } else {
+      localStorage.removeItem('lms_selected_batch');
     }
   }, [selectedBatchId]);
+
+  const completeLogin = (data: User) => {
+    const normalizedUser: User = {
+      ...data,
+      role: data.role.toUpperCase() as 'ADMIN' | 'TRAINER' | 'STUDENT',
+    };
+    setUser(normalizedUser);
+    setSelectedBatchId(normalizedUser.batch_id ?? null);
+  };
 
   const loginWithOtp = async (mobile: string, otp: string) => {
     const res = await api.verifyOtp(mobile, otp);
     if (res.success && res.data) {
-      // Normalize role to uppercase
-      const normalizedUser: User = {
-        ...res.data,
-        role: (res.data.role.toUpperCase() as 'ADMIN' | 'TRAINER' | 'STUDENT'),
-      };
-      setUser(normalizedUser);
-      if (normalizedUser.batch_id) {
-        setSelectedBatchId(normalizedUser.batch_id);
-      }
+      completeLogin(res.data);
+      return { success: true };
+    }
+    return { success: false, message: res.message || res.error || 'Authentication failed' };
+  };
+
+  const loginWithStudentAccount = async (accountId: string, email: string) => {
+    const res = await api.loginStudentWithAccount(accountId, email);
+    if (res.success && res.data) {
+      completeLogin(res.data);
       return { success: true };
     }
     return { success: false, message: res.message || res.error || 'Authentication failed' };
@@ -77,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedBatchId,
         setSelectedBatchId,
         loginWithOtp,
+        loginWithStudentAccount,
         logout,
       }}
     >
