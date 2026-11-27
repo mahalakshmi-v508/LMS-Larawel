@@ -21,6 +21,18 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Enquiry approvals
+
+Apply the enquiry account fields to the existing LMS database:
+
+```bash
+php artisan migrate --path=database/migrations/2026_11_26_000001_add_enquiry_approval_fields.php
+```
+
+Configure Laravel's `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM_ADDRESS` settings to deliver approval emails. Laravel's default `log` mailer records messages in the application log instead of delivering them.
+
+Approved students receive an account ID and login link by email. Their student profile is created only after they open the link and sign in with that ID and their registered email. Staff can continue using mobile OTP.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

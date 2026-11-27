@@ -202,7 +202,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
                     <label>Full Name<input className="form-input" name="name" placeholder="Enter your name" required /></label>
                     <label>Mobile Number<input className="form-input" name="mobile_number" type="tel" placeholder="10-digit mobile number" required /></label>
                   </div>
-                  <label>Email Address<input className="form-input" name="email" type="email" placeholder="you@example.com" /></label>
+                  <label>Email Address<input className="form-input" name="email" type="email" placeholder="you@example.com" required /></label>
                   <label>Course Interest
                     <select className="form-select" name="course_interest" required defaultValue="">
                       <option value="" disabled>Select a course</option>

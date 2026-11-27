@@ -33,9 +33,13 @@ use Illuminate\Support\Facades\Route;
 // 1. Authentication (mobile + OTP)
 Route::post('auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('auth/student-login', [AuthController::class, 'studentLogin']);
 
 // Public website
 Route::post('enquiries', [EnquiryController::class, 'store']);
+Route::get('admin/enquiries', [EnquiryController::class, 'index']);
+Route::post('admin/enquiries/{id}/approve', [EnquiryController::class, 'approve']);
+Route::post('admin/enquiries/{id}/reject', [EnquiryController::class, 'reject']);
 
 // 2. Users, students and trainers
 Route::get('users', [UserController::class, 'index']);

@@ -2,14 +2,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Smartphone, KeyRound, ArrowRight, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { Smartphone, KeyRound, ArrowRight, GraduationCap, CheckCircle2, Mail, BadgeCheck } from 'lucide-react';
 
 interface LoginViewProps {
   onBack?: () => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onBack }) => {
-  const { loginWithOtp } = useAuth();
+  const { loginWithOtp, loginWithStudentAccount } = useAuth();
+  const [loginMode, setLoginMode] = useState<'student' | 'otp'>('student');
+  const [accountId, setAccountId] = useState('');
+  const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -47,6 +50,22 @@ export const LoginView: React.FC<LoginViewProps> = ({ onBack }) => {
       const res = await loginWithOtp(mobile, otp);
       if (!res.success) {
         setError(res.message || 'Invalid OTP');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStudentLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await loginWithStudentAccount(accountId, email);
+      if (!res.success) {
+        setError(res.message || 'Student ID or email is incorrect');
       }
     } catch (err: any) {
       setError(err.message);
@@ -94,7 +113,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onBack }) => {
             Welcome to SkillForge LMS
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Sign in using your mobile number and OTP
+            Sign in with your student ID, or use mobile OTP for staff
           </p>
         </div>
 
@@ -114,7 +133,70 @@ export const LoginView: React.FC<LoginViewProps> = ({ onBack }) => {
             </div>
           )}
 
-          {!otpSent ? (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+            <button
+              type="button"
+              className={`btn ${loginMode === 'student' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ flex: 1 }}
+              onClick={() => { setLoginMode('student'); setError(''); }}
+            >
+              Student ID
+            </button>
+            <button
+              type="button"
+              className={`btn ${loginMode === 'otp' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ flex: 1 }}
+              onClick={() => { setLoginMode('otp'); setOtpSent(false); setError(''); }}
+            >
+              Staff OTP
+            </button>
+          </div>
+
+          {loginMode === 'student' ? (
+            <form onSubmit={handleStudentLogin}>
+              <div className="form-group">
+                <label className="form-label">Student ID</label>
+                <div style={{ position: 'relative' }}>
+                  <BadgeCheck size={18} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '13px' }} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. STU000123"
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    style={{ paddingLeft: '40px' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Registered Email</label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={18} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '13px' }} />
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="Email used for your enquiry"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{ paddingLeft: '40px' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !accountId || !email}
+                className="btn btn-primary btn-lg"
+                style={{ width: '100%', marginTop: '8px' }}
+              >
+                {loading ? 'Signing in...' : 'Sign in as Student'}
+                <ArrowRight size={18} />
+              </button>
+            </form>
+          ) : !otpSent ? (
             <form onSubmit={handleSendOtp}>
               <div className="form-group">
                 <label className="form-label">Registered Mobile Number</label>

@@ -6,13 +6,14 @@ import { SidebarBrand, SidebarUser } from '../../components/SidebarSections';
 import { useAuth } from '../../context/AuthContext';
 import {
   Users, UserCheck, BookOpen, Layers, Plus, Calendar, Video, FileText, CheckCircle2, Briefcase,
-  Eye, Pencil, X, Download, Bell, Menu, ChevronDown, GraduationCap, ArrowUpRight, Sparkles
+  Eye, Pencil, X, Download, Bell, Menu, ChevronDown, GraduationCap, ArrowUpRight, Sparkles,
+  ClipboardList, Check, XCircle
 } from 'lucide-react';
 import { EmsPortal } from '../ems/EmsPortal';
 
 export const AdminPortal: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems'>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => (typeof window === 'undefined' ? true : window.innerWidth > 1024));
 
   useEffect(() => {
@@ -25,6 +26,8 @@ export const AdminPortal: React.FC = () => {
 
   // Data states
   const [adminStudents, setAdminStudents] = useState<any[]>([]);
+  const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [processingEnquiryId, setProcessingEnquiryId] = useState<number | null>(null);
   const [trainers, setTrainers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
@@ -93,9 +96,45 @@ export const AdminPortal: React.FC = () => {
     return highestDayNumber + 1;
   };
 
+  const loadAdminEnquiries = async (force = false) => {
+    if (!force && loadedData.current.has('enquiries')) return;
+    loadedData.current.add('enquiries');
+    const res = await api.getAdminEnquiries();
+    if (res.success && res.data) {
+      setEnquiries(res.data);
+    } else {
+      loadedData.current.delete('enquiries');
+      showNotice(`Could not load enquiries: ${res.message || res.error || 'Request failed'}`);
+    }
+  };
+
   const showNotice = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(''), 4000);
+  };
+
+  const handleApproveEnquiry = async (enquiryId: number) => {
+    setProcessingEnquiryId(enquiryId);
+    const res = await api.approveEnquiry(enquiryId);
+    setProcessingEnquiryId(null);
+    if (!res.success || !res.data) {
+      showNotice(`Approval failed: ${res.message || res.error || 'Request failed'}`);
+      return;
+    }
+    showNotice(`Approved. Student ID ${res.data.account_id} was emailed to ${res.data.email}.`);
+    await Promise.all([loadAdminEnquiries(true), loadAdminStudents(true)]);
+  };
+
+  const handleRejectEnquiry = async (enquiryId: number) => {
+    setProcessingEnquiryId(enquiryId);
+    const res = await api.rejectEnquiry(enquiryId);
+    setProcessingEnquiryId(null);
+    if (!res.success) {
+      showNotice(`Rejection failed: ${res.message || res.error || 'Request failed'}`);
+      return;
+    }
+    showNotice('Enquiry rejected.');
+    await loadAdminEnquiries(true);
   };
 
   const loadAdminStudents = async (force = false) => {
@@ -147,11 +186,13 @@ export const AdminPortal: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'dashboard') {
-      Promise.all([loadTrainers(), loadCourses(), loadBatches()])
+      Promise.all([loadTrainers(), loadCourses(), loadBatches(), loadAdminEnquiries()])
         .catch((err) => console.error(err));
     } else if (activeTab === 'students') {
       Promise.all([loadAdminStudents(), loadBatches()])
         .catch((err) => console.error(err));
+    } else if (activeTab === 'enquiries') {
+      loadAdminEnquiries().catch((err) => console.error(err));
     } else if (activeTab === 'trainers') {
       loadTrainers().catch((err) => console.error(err));
     } else if (activeTab === 'courses' || activeTab === 'curriculum') {
@@ -478,7 +519,7 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const goToTab = (tab: 'dashboard' | 'students' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems') => {
+  const goToTab = (tab: 'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems') => {
     setActiveTab(tab);
     if (window.innerWidth <= 1024) setSidebarOpen(false);
   };
@@ -517,6 +558,14 @@ export const AdminPortal: React.FC = () => {
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
           <Users size={16} /> Students ({studentsList.length})
+        </button>
+
+        <button
+          onClick={() => goToTab('enquiries')}
+          className={`btn ${activeTab === 'enquiries' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ justifyContent: 'flex-start', width: '100%' }}
+        >
+          <ClipboardList size={16} /> Enquiries ({enquiries.filter((enquiry) => ['pending', 'new'].includes(String(enquiry.status).toLowerCase())).length})
         </button>
 
         <button
@@ -738,6 +787,7 @@ export const AdminPortal: React.FC = () => {
                     <tr>
                       <th>ID</th>
                       <th>Student Name</th>
+                      <th>Email</th>
                       <th>Mobile Number</th>
                       <th>Batch</th>
                       <th>Course</th>
@@ -750,8 +800,9 @@ export const AdminPortal: React.FC = () => {
                   <tbody>
                     {studentsList.map((s) => (
                       <tr key={s.student_id || s.id}>
-                        <td>#{s.student_id || s.id}</td>
+                        <td>{s.account_id || `#${s.student_id || s.id}`}</td>
                         <td style={{ fontWeight: 600 }}>{s.name}</td>
+                        <td>{s.email || '—'}</td>
                         <td>{s.mobile_number}</td>
                         <td>{s.batch_code || 'Unassigned'}</td>
                         <td>{s.course_name || '—'}</td>
@@ -919,6 +970,94 @@ export const AdminPortal: React.FC = () => {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'enquiries' && (
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Student Enquiries</h2>
+                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Review course enquiries and approve or reject applicants.</p>
+              </div>
+              <button type="button" className="btn btn-secondary" onClick={() => loadAdminEnquiries(true)}>
+                Refresh
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Course Interest</th>
+                    <th>Message</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enquiries.map((enquiry) => {
+                    const status = String(enquiry.status || 'pending').toLowerCase();
+                    const isAwaitingReview = status === 'pending' || status === 'new';
+                    const isProcessing = processingEnquiryId === Number(enquiry.id);
+                    return (
+                      <tr key={enquiry.id}>
+                        <td style={{ fontWeight: 600 }}>{enquiry.name}</td>
+                        <td>{enquiry.email || '—'}</td>
+                        <td>{enquiry.mobile_number}</td>
+                        <td>{enquiry.course_interest}</td>
+                        <td>{enquiry.message || '—'}</td>
+                        <td>{enquiry.created_at ? String(enquiry.created_at).split('T')[0] : '—'}</td>
+                        <td>
+                          <span className={`badge ${status === 'approved' ? 'badge-success' : status === 'rejected' ? 'badge-warning' : 'badge-primary'}`}>
+                            {status.toUpperCase()}
+                          </span>
+                          {enquiry.account_id && <div style={{ marginTop: '4px', fontSize: '0.78rem' }}>{enquiry.account_id}</div>}
+                        </td>
+                        <td>
+                          {isAwaitingReview ? (
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                                disabled={isProcessing}
+                                onClick={() => handleApproveEnquiry(Number(enquiry.id))}
+                              >
+                                <Check size={14} /> {isProcessing ? 'Working...' : 'Approve'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                disabled={isProcessing}
+                                onClick={() => handleRejectEnquiry(Number(enquiry.id))}
+                              >
+                                <XCircle size={14} /> Reject
+                              </button>
+                            </div>
+                          ) : status === 'approved' ? (
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              disabled={isProcessing}
+                              onClick={() => handleApproveEnquiry(Number(enquiry.id))}
+                            >
+                              {isProcessing ? 'Sending...' : 'Resend ID Email'}
+                            </button>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {enquiries.length === 0 && (
+                    <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No enquiries yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
 
         {/* 3. TRAINERS TAB */}
