@@ -31,6 +31,10 @@ export const TrainerPortal: React.FC = () => {
   const [chatRoom, setChatRoom] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
+  const [chatType, setChatType] = useState<'direct' | 'batch'>('batch');
+  const [selectedDirectStudentId, setSelectedDirectStudentId] = useState<number | null>(null);
+  const [directChatMessages, setDirectChatMessages] = useState<any[]>([]);
+  const [directChatMessage, setDirectChatMessage] = useState('');
 
   // Form states
   const [newTopic, setNewTopic] = useState('');
@@ -373,6 +377,39 @@ export const TrainerPortal: React.FC = () => {
       if (msgRes.success && msgRes.data) setChatMessages(msgRes.data);
     } else {
       showNotice(`Chat blocked: ${res.message}`);
+    }
+  };
+
+  const loadDirectMessages = async (studentUserId: number) => {
+    const senderId = user?.id || user?.user_id;
+    if (!senderId) return;
+    const res = await api.getDirectMessages(senderId, studentUserId);
+    if (res.success && res.data) setDirectChatMessages(res.data);
+  };
+
+  useEffect(() => {
+    if (chatType !== 'direct' || !selectedDirectStudentId) return;
+    loadDirectMessages(selectedDirectStudentId);
+    const interval = window.setInterval(() => loadDirectMessages(selectedDirectStudentId), 3000);
+    return () => window.clearInterval(interval);
+  }, [chatType, selectedDirectStudentId]);
+
+  const handleSendDirectMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const senderId = user?.id || user?.user_id;
+    if (!senderId || !selectedDirectStudentId || !directChatMessage.trim()) return;
+
+    const res = await api.sendDirectMessage({
+      sender_user_id: senderId,
+      recipient_user_id: selectedDirectStudentId,
+      message: directChatMessage,
+    });
+
+    if (res.success) {
+      setDirectChatMessage('');
+      await loadDirectMessages(selectedDirectStudentId);
+    } else {
+      showNotice(res.message || 'Unable to send direct message.');
     }
   };
 
@@ -976,9 +1013,71 @@ export const TrainerPortal: React.FC = () => {
         {/* 6. BATCH CHAT WITH TIMER TAB (§ 16) */}
         {activeTab === 'chat' && (
           <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Trainer Messages</h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className={`btn btn-sm ${chatType === 'direct' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('direct')}>
+                  Direct Chat
+                </button>
+                <button type="button" className={`btn btn-sm ${chatType === 'batch' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('batch')}>
+                  Batch Chat
+                </button>
+              </div>
+            </div>
+
+            {chatType === 'direct' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '16px', height: '550px' }}>
+                <div className="glass-card" style={{ padding: '12px', overflowY: 'auto' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '10px' }}>Batch Students</div>
+                  {students.map((student) => (
+                    <button
+                      type="button"
+                      key={student.user_id}
+                      onClick={() => setSelectedDirectStudentId(Number(student.user_id))}
+                      className={`btn btn-sm ${selectedDirectStudentId === Number(student.user_id) ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ width: '100%', justifyContent: 'flex-start', marginBottom: '8px' }}
+                    >
+                      {student.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 700 }}>
+                    {students.find((student) => Number(student.user_id) === selectedDirectStudentId)?.name || 'Select a student'}
+                  </div>
+                  <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {!selectedDirectStudentId ? (
+                      <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>Choose a student to start direct chat.</div>
+                    ) : directChatMessages.length === 0 ? (
+                      <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>No direct messages yet.</div>
+                    ) : directChatMessages.map((message) => (
+                      <div key={message.id} style={{
+                        maxWidth: '75%',
+                        alignSelf: message.sender_role === 'TRAINER' ? 'flex-end' : 'flex-start',
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-subtle)',
+                        background: message.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.04)',
+                      }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: '4px' }}>{message.sender_name}</div>
+                        <div>{message.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <form onSubmit={handleSendDirectMessage} style={{ padding: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '10px' }}>
+                    <input className="form-input" value={directChatMessage} onChange={(event) => setDirectChatMessage(event.target.value)} placeholder="Write a direct message..." disabled={!selectedDirectStudentId} />
+                    <button type="submit" className="btn btn-primary" disabled={!selectedDirectStudentId}>Send</button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {chatType === 'batch' && (
+              <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Realtime Batch Chat with Class Timer (§ 16)</h2>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Realtime Batch Chat with Class Timer</h2>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   Trainer controls the chat availability window for students during live sessions.
                 </div>
@@ -1060,6 +1159,8 @@ export const TrainerPortal: React.FC = () => {
                 </button>
               </form>
             </div>
+            </>
+            )}
           </div>
         )}
 

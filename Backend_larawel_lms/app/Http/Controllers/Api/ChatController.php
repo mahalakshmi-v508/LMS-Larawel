@@ -9,6 +9,120 @@ use Illuminate\Support\Facades\DB;
 
 class ChatController extends ApiController
 {
+    public function storeDirect(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sender_user_id' => ['required', 'integer'],
+            'recipient_user_id' => ['required', 'integer', 'different:sender_user_id'],
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $sender = DB::table('users')->where('id', $validated['sender_user_id'])->first();
+        $recipient = DB::table('users')->where('id', $validated['recipient_user_id'])->first();
+
+        if (! $sender || ! $recipient) {
+            throw new ApiException('Sender or recipient account was not found.', 404);
+        }
+
+        $id = DB::table('direct_messages')->insertGetId([
+            'sender_user_id' => $validated['sender_user_id'],
+            'recipient_user_id' => $validated['recipient_user_id'],
+            'message' => trim($validated['message']),
+            'sent_at' => now(),
+        ]);
+
+        return $this->ok(DB::table('direct_messages')
+            ->where('id', $id)
+            ->first(), 201);
+    }
+
+    public function directMessages(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_a' => ['required', 'integer'],
+            'user_b' => ['required', 'integer'],
+        ]);
+
+        $rows = DB::table('direct_messages as dm')
+            ->join('users as sender', 'sender.id', '=', 'dm.sender_user_id')
+            ->leftJoin('users as recipient', 'recipient.id', '=', 'dm.recipient_user_id')
+            ->where(function ($query) use ($validated) {
+                $query->where(function ($pair) use ($validated) {
+                    $pair->where('dm.sender_user_id', $validated['user_a'])
+                        ->where('dm.recipient_user_id', $validated['user_b']);
+                })->orWhere(function ($pair) use ($validated) {
+                    $pair->where('dm.sender_user_id', $validated['user_b'])
+                        ->where('dm.recipient_user_id', $validated['user_a']);
+                });
+            })
+            ->select(
+                'dm.*',
+                'sender.name as sender_name',
+                'sender.role as sender_role',
+                'recipient.name as recipient_name'
+            )
+            ->orderBy('dm.sent_at')
+            ->get();
+
+        return $this->ok($rows);
+    }
+
+    public function directConversations(string $userId): JsonResponse
+    {
+        $rows = DB::table('direct_messages as dm')
+            ->where('dm.sender_user_id', $userId)
+            ->orWhere('dm.recipient_user_id', $userId)
+            ->get();
+
+        $counterpartIds = collect($rows)
+            ->flatMap(fn ($row) => [(int) $row->sender_user_id, (int) $row->recipient_user_id])
+            ->filter(fn ($id) => $id !== (int) $userId)
+            ->unique()
+            ->values();
+
+        $users = $counterpartIds->isEmpty()
+            ? collect()
+            : DB::table('users')->whereIn('id', $counterpartIds)->get();
+
+        return $this->ok($users);
+    }
+
+    public function allDirectConversations(): JsonResponse
+    {
+        $rows = DB::table('direct_messages as dm')
+            ->join('users as sender', 'sender.id', '=', 'dm.sender_user_id')
+            ->join('users as recipient', 'recipient.id', '=', 'dm.recipient_user_id')
+            ->select(
+                'dm.sender_user_id',
+                'dm.recipient_user_id',
+                'sender.name as sender_name',
+                'sender.role as sender_role',
+                'recipient.name as recipient_name',
+                'recipient.role as recipient_role'
+            )
+            ->orderByDesc('dm.sent_at')
+            ->get();
+
+        $conversations = [];
+        foreach ($rows as $row) {
+            $ids = [(int) $row->sender_user_id, (int) $row->recipient_user_id];
+            sort($ids);
+            $key = implode('-', $ids);
+            if (! isset($conversations[$key])) {
+                $conversations[$key] = [
+                    'key' => $key,
+                    'user_a' => $ids[0],
+                    'user_b' => $ids[1],
+                    'sender_name' => $row->sender_name,
+                    'sender_role' => $row->sender_role,
+                    'recipient_name' => $row->recipient_name,
+                    'recipient_role' => $row->recipient_role,
+                ];
+            }
+        }
+
+        return $this->ok(array_values($conversations));
+    }
     /**
      * POST /api/batches/{id}/chat-room
      */

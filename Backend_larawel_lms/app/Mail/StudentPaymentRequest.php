@@ -8,31 +8,41 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class StudentAccountApproved extends Mailable
+/**
+ * Sent when an admin approves an enquiry and sets the course fee.
+ *
+ * The student ID is intentionally NOT included here — the account is created
+ * only after the payment is completed (see StudentPaymentReceived).
+ */
+class StudentPaymentRequest extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public string $studentName,
-        public string $accountId,
         public string $courseInterest,
-        public string $loginUrl
+        public float $amount,
+        public string $paymentUrl,
+        public string $loginUrl,
+        public string $qrPng = '',
     ) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Your SkillForge student account is approved');
+        return new Envelope(subject: 'SkillForge: Complete your course fee payment');
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.student-account-approved',
+            view: 'emails.student-payment-request',
             with: [
                 'studentName' => $this->studentName,
-                'accountId' => $this->accountId,
                 'courseInterest' => $this->courseInterest,
+                'amount' => $this->amount,
+                'paymentUrl' => $this->paymentUrl,
                 'loginUrl' => $this->loginUrl,
+                'qrPng' => $this->qrPng,
             ]
         );
     }

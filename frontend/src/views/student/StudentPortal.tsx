@@ -36,6 +36,9 @@ export const StudentPortal: React.FC = () => {
   const [chatRoom, setChatRoom] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
+  const [chatType, setChatType] = useState<'direct' | 'batch'>('batch');
+  const [directChatMessages, setDirectChatMessages] = useState<any[]>([]);
+  const [directChatMessage, setDirectChatMessage] = useState('');
 
   const [notice, setNotice] = useState('');
 
@@ -193,6 +196,41 @@ export const StudentPortal: React.FC = () => {
     }
   };
 
+  const loadDirectMessages = async () => {
+    const senderId = user?.user_id || user?.id;
+    const recipientId = batchInfo?.trainer_user_id;
+    if (!senderId || !recipientId) return;
+    const res = await api.getDirectMessages(senderId, recipientId);
+    if (res.success && res.data) setDirectChatMessages(res.data);
+  };
+
+  useEffect(() => {
+    if (chatType !== 'direct') return;
+    loadDirectMessages();
+    const interval = window.setInterval(loadDirectMessages, 3000);
+    return () => window.clearInterval(interval);
+  }, [chatType, batchInfo?.trainer_user_id]);
+
+  const handleSendDirectChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const senderId = user?.user_id || user?.id;
+    const recipientId = batchInfo?.trainer_user_id;
+    if (!senderId || !recipientId || !directChatMessage.trim()) return;
+
+    const res = await api.sendDirectMessage({
+      sender_user_id: senderId,
+      recipient_user_id: recipientId,
+      message: directChatMessage,
+    });
+
+    if (res.success) {
+      setDirectChatMessage('');
+      await loadDirectMessages();
+    } else {
+      showNotice(res.message || 'Unable to send direct message.');
+    }
+  };
+
   const tabs = [
     { id: 'classroom' as const, label: 'Day-Wise Classroom (1..60)', icon: <BookOpen size={16} /> },
     { id: 'classes' as const, label: 'Live Classes (Teams)', icon: <Calendar size={16} /> },
@@ -200,7 +238,7 @@ export const StudentPortal: React.FC = () => {
     { id: 'attendance' as const, label: 'My Attendance', icon: <CheckSquare size={16} /> },
     { id: 'assignments' as const, label: 'Assignments', icon: <FileText size={16} /> },
     { id: 'tests' as const, label: 'Weekly Tests', icon: <CheckCircle2 size={16} /> },
-    { id: 'chat' as const, label: 'Batch Chat', icon: <MessageSquare size={16} /> },
+    { id: 'chat' as const, label: 'Chat', icon: <MessageSquare size={16} /> },
     { id: 'announcements' as const, label: 'Announcements', icon: <Bell size={16} /> },
     { id: 'certificates' as const, label: 'Certificates', icon: <Award size={16} /> },
   ];
@@ -685,9 +723,48 @@ export const StudentPortal: React.FC = () => {
         {/* 7. BATCH CHAT TAB (§ 16) */}
         {activeTab === 'chat' && (
           <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '12px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Student Messages</h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className={`btn btn-sm ${chatType === 'direct' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('direct')}>Direct Chat</button>
+                <button type="button" className={`btn btn-sm ${chatType === 'batch' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('batch')}>Batch Chat</button>
+              </div>
+            </div>
+
+            {chatType === 'direct' && (
+              <div className="glass-card" style={{ height: '550px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 700 }}>
+                  Direct chat with {batchInfo?.trainer_name || 'Trainer'}
+                </div>
+                <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {directChatMessages.length === 0 ? (
+                    <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>No direct messages yet.</div>
+                  ) : directChatMessages.map((message) => (
+                    <div key={message.id} style={{
+                      maxWidth: '75%',
+                      alignSelf: message.sender_role === 'STUDENT' ? 'flex-end' : 'flex-start',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-subtle)',
+                      background: message.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.04)',
+                    }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: '4px' }}>{message.sender_name} ({message.sender_role})</div>
+                      <div>{message.message}</div>
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleSendDirectChatMessage} style={{ padding: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '10px' }}>
+                  <input className="form-input" value={directChatMessage} onChange={(event) => setDirectChatMessage(event.target.value)} placeholder="Write a direct message to trainer..." />
+                  <button type="submit" className="btn btn-primary"><Send size={16} /> Send</button>
+                </form>
+              </div>
+            )}
+
+            {chatType === 'batch' && (
+            <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Batch Chat Room (§ 16)</h2>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Batch Chat Room</h2>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   Chat is active only during class availability windows set by the trainer.
                 </div>
@@ -736,6 +813,8 @@ export const StudentPortal: React.FC = () => {
                 </button>
               </form>
             </div>
+            </>
+            )}
           </div>
         )}
 

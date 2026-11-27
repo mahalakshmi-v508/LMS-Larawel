@@ -7,13 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Users, UserCheck, BookOpen, Layers, Plus, Calendar, Video, FileText, CheckCircle2, Briefcase,
   Eye, Pencil, X, Download, Bell, Menu, ChevronDown, GraduationCap, ArrowUpRight, Sparkles,
-  ClipboardList, Check, XCircle
+  ClipboardList, Check, XCircle, MessageSquare
 } from 'lucide-react';
 import { EmsPortal } from '../ems/EmsPortal';
 
 export const AdminPortal: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'chat' | 'ems'>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => (typeof window === 'undefined' ? true : window.innerWidth > 1024));
 
   useEffect(() => {
@@ -28,9 +28,17 @@ export const AdminPortal: React.FC = () => {
   const [adminStudents, setAdminStudents] = useState<any[]>([]);
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [processingEnquiryId, setProcessingEnquiryId] = useState<number | null>(null);
+  const [enquiryAmounts, setEnquiryAmounts] = useState<Record<number, string>>({});
   const [trainers, setTrainers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
+  const [selectedChatBatchId, setSelectedChatBatchId] = useState<number | null>(null);
+  const [chatRoom, setChatRoom] = useState<any>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatType, setChatType] = useState<'direct' | 'batch'>('batch');
+  const [directConversations, setDirectConversations] = useState<any[]>([]);
+  const [selectedDirectConversation, setSelectedDirectConversation] = useState<any>(null);
+  const [adminDirectMessages, setAdminDirectMessages] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [courseDays, setCourseDays] = useState<any[]>([]);
   const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
@@ -39,6 +47,7 @@ export const AdminPortal: React.FC = () => {
   // Form states
   const [newStudentMobile, setNewStudentMobile] = useState('');
   const [newStudentName, setNewStudentName] = useState('');
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [newTrainerMobile, setNewTrainerMobile] = useState('');
   const [newTrainerName, setNewTrainerName] = useState('');
   const [newTrainerSpec, setNewTrainerSpec] = useState('Full Stack Web Development');
@@ -113,16 +122,44 @@ export const AdminPortal: React.FC = () => {
     setTimeout(() => setNotification(''), 4000);
   };
 
-  const handleApproveEnquiry = async (enquiryId: number) => {
+  const handleApproveEnquiry = async (enquiryId: number, existingAmount?: number | string | null) => {
+    const rawAmount = enquiryAmounts[enquiryId] ?? (existingAmount !== null && existingAmount !== undefined ? String(existingAmount) : '');
+    const amount = Number(rawAmount);
+    if (!rawAmount || Number.isNaN(amount) || amount < 0) {
+      showNotice('Enter a valid course fee amount before approving.');
+      return;
+    }
+
     setProcessingEnquiryId(enquiryId);
-    const res = await api.approveEnquiry(enquiryId);
+    const res = await api.approveEnquiry(enquiryId, amount);
     setProcessingEnquiryId(null);
     if (!res.success || !res.data) {
       showNotice(`Approval failed: ${res.message || res.error || 'Request failed'}`);
       return;
     }
-    showNotice(`Approved. Student ID ${res.data.account_id} was emailed to ${res.data.email}.`);
+    showNotice(
+      (res.data.whatsapp_sent === false || res.data.mail_sent === false)
+        ? `Approved, but the WhatsApp message could not be sent. Check WhatsApp settings and use "Resend WhatsApp".`
+        : `Approved. The ₹${Number(res.data.amount).toFixed(2)} payment details were sent on WhatsApp to ${res.data.mobile_number || 'the student'}. The Student ID will be created automatically once the fee is paid.`
+    );
+    setEnquiryAmounts((prev) => {
+      const next = { ...prev };
+      delete next[enquiryId];
+      return next;
+    });
     await Promise.all([loadAdminEnquiries(true), loadAdminStudents(true)]);
+  };
+
+  const handleMarkEnquiryPaid = async (enquiryId: number) => {
+    setProcessingEnquiryId(enquiryId);
+    const res = await api.markEnquiryPaid(enquiryId);
+    setProcessingEnquiryId(null);
+    if (!res.success) {
+      showNotice(`Could not mark as paid: ${res.message || res.error || 'Request failed'}`);
+      return;
+    }
+    showNotice('Payment marked as received.');
+    await loadAdminEnquiries(true);
   };
 
   const handleRejectEnquiry = async (enquiryId: number) => {
@@ -179,6 +216,9 @@ export const AdminPortal: React.FC = () => {
     const res = await api.getBatches(undefined, true);
     if (res.success && res.data) {
       setBatches(res.data);
+      if (!selectedChatBatchId && res.data.length > 0) {
+        setSelectedChatBatchId(Number(res.data[0].id));
+      }
     } else {
       loadedData.current.delete('batches');
     }
@@ -200,6 +240,8 @@ export const AdminPortal: React.FC = () => {
     } else if (activeTab === 'batches') {
       Promise.all([loadBatches(), loadCourses(), loadTrainers(), loadAdminStudents()])
         .catch((err) => console.error(err));
+    } else if (activeTab === 'chat') {
+      loadBatches().catch((err) => console.error(err));
     }
   }, [activeTab]);
 
@@ -343,6 +385,62 @@ export const AdminPortal: React.FC = () => {
     }
   }, [activeTab, selectedDayId]);
 
+  const loadAdminChat = async (batchId: number) => {
+    const roomRes = await api.getChatRoom(batchId);
+    if (!roomRes.success) {
+      setChatRoom(null);
+      setChatMessages([]);
+      return;
+    }
+
+    const room = roomRes.data;
+    setChatRoom(room);
+
+    if (room?.id) {
+      const messageRes = await api.getChatMessages(room.id);
+      if (messageRes.success && messageRes.data) {
+        setChatMessages(messageRes.data);
+      }
+    } else {
+      setChatMessages([]);
+    }
+  };
+
+  const loadAdminDirectConversations = async () => {
+    const res = await api.getAllDirectConversations();
+    if (res.success && res.data) setDirectConversations(res.data);
+  };
+
+  const loadAdminDirectMessages = async (conversation: any) => {
+    const res = await api.getDirectMessages(conversation.user_a, conversation.user_b);
+    if (res.success && res.data) setAdminDirectMessages(res.data);
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'chat' || !selectedChatBatchId) return;
+
+    loadAdminChat(selectedChatBatchId);
+    const interval = window.setInterval(() => {
+      loadAdminChat(selectedChatBatchId);
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [activeTab, selectedChatBatchId]);
+
+  useEffect(() => {
+    if (activeTab !== 'chat' || chatType !== 'direct') return;
+    loadAdminDirectConversations();
+    const interval = window.setInterval(loadAdminDirectConversations, 3000);
+    return () => window.clearInterval(interval);
+  }, [activeTab, chatType]);
+
+  useEffect(() => {
+    if (!selectedDirectConversation) return;
+    loadAdminDirectMessages(selectedDirectConversation);
+    const interval = window.setInterval(() => loadAdminDirectMessages(selectedDirectConversation), 3000);
+    return () => window.clearInterval(interval);
+  }, [selectedDirectConversation]);
+
   // Handle Add Student
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,6 +451,7 @@ export const AdminPortal: React.FC = () => {
         showNotice(`Student ${newStudentName} created successfully!`);
         setNewStudentName('');
         setNewStudentMobile('');
+        setShowAddStudentModal(false);
         await loadAdminStudents(true);
       } else {
         showNotice(`Error: ${studentRes.message || studentRes.error}`);
@@ -519,7 +618,7 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const goToTab = (tab: 'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'ems') => {
+  const goToTab = (tab: 'dashboard' | 'students' | 'enquiries' | 'trainers' | 'courses' | 'batches' | 'curriculum' | 'chat' | 'ems') => {
     setActiveTab(tab);
     if (window.innerWidth <= 1024) setSidebarOpen(false);
   };
@@ -598,6 +697,14 @@ export const AdminPortal: React.FC = () => {
           style={{ justifyContent: 'flex-start', width: '100%' }}
         >
           <FileText size={16} /> Curriculum (60 Days)
+        </button>
+
+        <button
+          onClick={() => goToTab('chat')}
+          className={`btn ${activeTab === 'chat' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ justifyContent: 'flex-start', width: '100%' }}
+        >
+          <MessageSquare size={16} /> Batch Chat
         </button>
 
         <div style={{ margin: '12px 0 6px', padding: '12px 12px 4px', borderTop: '1px solid rgba(255, 255, 255, 0.14)', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.55)', letterSpacing: '0.05em' }}>
@@ -775,13 +882,27 @@ export const AdminPortal: React.FC = () => {
         {/* 2. STUDENTS TAB */}
         {activeTab === 'students' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Student Management (§ 4)</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Student Management (§ 4)</h2>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '4px' }}>
+                  {studentsList.length} students registered
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setShowAddStudentModal(true)}
+                title="Add new student"
+                style={{ width: '42px', height: '42px', padding: 0, borderRadius: '50%', justifyContent: 'center', flexShrink: 0 }}
+              >
+                <Plus size={20} />
+              </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
+            <div style={{ width: '100%' }}>
               {/* Students Table */}
-              <div className="table-container">
+              <div className="table-container" style={{ width: '100%' }}>
                 <table className="data-table">
                   <thead>
                     <tr>
@@ -822,23 +943,6 @@ export const AdminPortal: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="glass-card" style={{ padding: '24px', height: 'fit-content' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Add New Student</h3>
-                <form onSubmit={handleCreateStudent}>
-                  <div className="form-group">
-                    <label className="form-label">Full Name</label>
-                    <input className="form-input" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} required placeholder="e.g. John Doe" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Mobile Number</label>
-                    <input className="form-input" value={newStudentMobile} onChange={(e) => setNewStudentMobile(e.target.value)} required placeholder="10-digit mobile" />
-                  </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}>
-                    <Plus size={16} /> Register Student
-                  </button>
-                </form>
               </div>
             </div>
 
@@ -988,13 +1092,13 @@ export const AdminPortal: React.FC = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
+                    <th>Student</th>
                     <th>Mobile</th>
                     <th>Course Interest</th>
-                    <th>Message</th>
                     <th>Submitted</th>
+                    <th>Fee (₹)</th>
                     <th>Status</th>
+                    <th>Payment</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1003,28 +1107,91 @@ export const AdminPortal: React.FC = () => {
                     const status = String(enquiry.status || 'pending').toLowerCase();
                     const isAwaitingReview = status === 'pending' || status === 'new';
                     const isProcessing = processingEnquiryId === Number(enquiry.id);
+                    const paymentStatus = String(enquiry.payment_status || 'UNPAID').toUpperCase();
+                    const isPaid = paymentStatus === 'PAID';
                     return (
                       <tr key={enquiry.id}>
-                        <td style={{ fontWeight: 600 }}>{enquiry.name}</td>
-                        <td>{enquiry.email || '—'}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{enquiry.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{enquiry.email || '—'}</div>
+                        </td>
                         <td>{enquiry.mobile_number}</td>
-                        <td>{enquiry.course_interest}</td>
-                        <td>{enquiry.message || '—'}</td>
+                        <td>
+                          <div>{enquiry.course_interest}</div>
+                          {enquiry.message && (
+                            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>{enquiry.message}</div>
+                          )}
+                        </td>
                         <td>{enquiry.created_at ? String(enquiry.created_at).split('T')[0] : '—'}</td>
+                        <td>
+                          {status !== 'rejected' ? (
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              className="form-input"
+                              placeholder="e.g. 15000"
+                              value={
+                                enquiryAmounts[Number(enquiry.id)] ??
+                                (enquiry.amount !== null && enquiry.amount !== undefined ? String(enquiry.amount) : '')
+                              }
+                              onChange={(e) =>
+                                setEnquiryAmounts((prev) => ({ ...prev, [Number(enquiry.id)]: e.target.value }))
+                              }
+                              style={{ width: '110px', padding: '6px 10px', fontSize: '0.82rem' }}
+                            />
+                          ) : enquiry.amount !== null && enquiry.amount !== undefined ? (
+                            <strong>₹{Number(enquiry.amount).toFixed(2)}</strong>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
                         <td>
                           <span className={`badge ${status === 'approved' ? 'badge-success' : status === 'rejected' ? 'badge-warning' : 'badge-primary'}`}>
                             {status.toUpperCase()}
                           </span>
-                          {enquiry.account_id && <div style={{ marginTop: '4px', fontSize: '0.78rem' }}>{enquiry.account_id}</div>}
+                          {enquiry.account_id ? (
+                            <div style={{ marginTop: '4px', fontSize: '0.78rem', fontWeight: 600 }}>{enquiry.account_id}</div>
+                          ) : status === 'approved' ? (
+                            <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              ID after payment
+                            </div>
+                          ) : null}
+                        </td>
+                        <td>
+                          {status === 'approved' ? (
+                            <div>
+                              <span className={`badge ${isPaid ? 'badge-success' : 'badge-warning'}`}>
+                                {isPaid ? 'PAID' : 'UNPAID'}
+                              </span>
+                              {isPaid && enquiry.payment_reference && (
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                  {enquiry.payment_reference}
+                                </div>
+                              )}
+                              {!isPaid && enquiry.qr_token && (
+                                <div style={{ marginTop: '5px' }}>
+                                  <a
+                                    href={api.enquiryQrUrl(enquiry.qr_token)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline' }}
+                                  >
+                                    View QR
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          ) : '—'}
                         </td>
                         <td>
                           {isAwaitingReview ? (
-                            <div style={{ display: 'flex', gap: '6px' }}>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               <button
                                 type="button"
                                 className="btn btn-primary btn-sm"
                                 disabled={isProcessing}
-                                onClick={() => handleApproveEnquiry(Number(enquiry.id))}
+                                onClick={() => handleApproveEnquiry(Number(enquiry.id), enquiry.amount)}
                               >
                                 <Check size={14} /> {isProcessing ? 'Working...' : 'Approve'}
                               </button>
@@ -1038,14 +1205,26 @@ export const AdminPortal: React.FC = () => {
                               </button>
                             </div>
                           ) : status === 'approved' ? (
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              disabled={isProcessing}
-                              onClick={() => handleApproveEnquiry(Number(enquiry.id))}
-                            >
-                              {isProcessing ? 'Sending...' : 'Resend ID Email'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {!isPaid && (
+                                <button
+                                  type="button"
+                                  className="btn btn-success btn-sm"
+                                  disabled={isProcessing}
+                                  onClick={() => handleMarkEnquiryPaid(Number(enquiry.id))}
+                                >
+                                  <CheckCircle2 size={14} /> {isProcessing ? 'Working...' : 'Mark paid'}
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                disabled={isProcessing}
+                                onClick={() => handleApproveEnquiry(Number(enquiry.id), enquiry.amount)}
+                              >
+                                {isProcessing ? 'Sending...' : 'Resend WhatsApp'}
+                              </button>
+                            </div>
                           ) : '—'}
                         </td>
                       </tr>
@@ -1276,6 +1455,137 @@ export const AdminPortal: React.FC = () => {
           </div>
         )}
 
+        {/* Batch chat monitoring */}
+        {activeTab === 'chat' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Trainer–Student Messages</h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className={`btn btn-sm ${chatType === 'direct' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('direct')}>Direct Chat</button>
+                <button type="button" className={`btn btn-sm ${chatType === 'batch' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChatType('batch')}>Batch Chat</button>
+              </div>
+            </div>
+
+            {chatType === 'direct' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '16px', height: '550px' }}>
+                <div className="glass-card" style={{ padding: '12px', overflowY: 'auto' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '10px' }}>Direct Conversations</div>
+                  {directConversations.length === 0 ? (
+                    <div style={{ color: 'var(--text-dim)', fontSize: '0.82rem', textAlign: 'center', padding: '20px 4px' }}>No direct conversations yet.</div>
+                  ) : directConversations.map((conversation) => (
+                    <button
+                      type="button"
+                      key={conversation.key}
+                      onClick={() => setSelectedDirectConversation(conversation)}
+                      className={`btn btn-sm ${selectedDirectConversation?.key === conversation.key ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ width: '100%', justifyContent: 'flex-start', marginBottom: '8px', height: 'auto', textAlign: 'left' }}
+                    >
+                      {conversation.sender_role === 'TRAINER' ? conversation.sender_name : conversation.recipient_name}
+                      {' ↔ '}
+                      {conversation.recipient_role === 'STUDENT' ? conversation.recipient_name : conversation.sender_name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', fontWeight: 700 }}>Direct Chat Monitor</div>
+                  <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {!selectedDirectConversation ? (
+                      <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>Select a direct conversation.</div>
+                    ) : adminDirectMessages.length === 0 ? (
+                      <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>No messages in this conversation.</div>
+                    ) : adminDirectMessages.map((message) => (
+                      <div key={message.id} style={{
+                        maxWidth: '75%',
+                        alignSelf: message.sender_role === 'TRAINER' ? 'flex-end' : 'flex-start',
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-subtle)',
+                        background: message.sender_role === 'TRAINER' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.04)',
+                      }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: '4px' }}>{message.sender_name} ({message.sender_role})</div>
+                        <div>{message.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {chatType === 'batch' && (
+              <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Live read-only view of batch conversations.</div>
+              <select
+                className="form-select"
+                value={selectedChatBatchId ?? ''}
+                onChange={(event) => setSelectedChatBatchId(event.target.value ? Number(event.target.value) : null)}
+                style={{ maxWidth: '280px' }}
+              >
+                <option value="">Select batch</option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    {batch.batch_code} - {batch.course_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="glass-card" style={{ height: '550px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <div style={{ fontWeight: 700 }}>
+                  {batches.find((batch) => Number(batch.id) === selectedChatBatchId)?.batch_code || 'Batch'} Chat Stream
+                </div>
+                <span className={`badge ${chatRoom?.is_currently_open === 1 ? 'badge-success' : 'badge-danger'}`}>
+                  {chatRoom?.is_currently_open === 1 ? '● LIVE / OPEN' : '○ CLOSED'}
+                </span>
+              </div>
+
+              <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {!chatRoom?.id ? (
+                  <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>
+                    No chat room has been initialized for this batch.
+                  </div>
+                ) : chatMessages.length === 0 ? (
+                  <div style={{ color: 'var(--text-dim)', textAlign: 'center', margin: 'auto' }}>
+                    No messages yet in this batch chat.
+                  </div>
+                ) : (
+                  chatMessages.map((message) => (
+                    <div key={message.id} style={{
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      background: message.sender_role === 'TRAINER'
+                        ? 'rgba(99, 102, 241, 0.15)'
+                        : 'rgba(15, 23, 42, 0.04)',
+                      border: '1px solid var(--border-subtle)',
+                      maxWidth: '75%',
+                      alignSelf: message.sender_role === 'TRAINER' ? 'flex-end' : 'flex-start',
+                    }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: message.sender_role === 'TRAINER' ? 'var(--primary)' : 'var(--text-muted)', marginBottom: '4px' }}>
+                        {message.sender_name} ({message.sender_role})
+                      </div>
+                      <div style={{ fontSize: '0.9rem' }}>{message.message}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.78rem', textAlign: 'center' }}>
+                Read-only chat monitoring • Updates automatically every 3 seconds
+              </div>
+            </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* 6. CURRICULUM EDITOR TAB (§ 8) */}
         {activeTab === 'curriculum' && (
           <div>
@@ -1418,6 +1728,68 @@ export const AdminPortal: React.FC = () => {
         {activeTab === 'ems' && <EmsPortal />}
         </main>
       </div>
+
+      {/* Add student modal */}
+      {showAddStudentModal && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowAddStudentModal(false);
+          }}
+        >
+          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="add-student-title">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', gap: '12px' }}>
+              <div>
+                <h3 id="add-student-title" style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>Add New Student</h3>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>
+                  Create a student account in the LMS
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowAddStudentModal(false)}
+                style={{ width: '34px', height: '34px', padding: 0, borderRadius: '50%', justifyContent: 'center' }}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStudent}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  className="form-input"
+                  value={newStudentName}
+                  onChange={(event) => setNewStudentName(event.target.value)}
+                  required
+                  placeholder="e.g. John Doe"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mobile Number</label>
+                <input
+                  className="form-input"
+                  value={newStudentMobile}
+                  onChange={(event) => setNewStudentMobile(event.target.value)}
+                  required
+                  placeholder="10-digit mobile"
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddStudentModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <Plus size={16} /> Register Student
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Certificate preview modal */}
       {previewCertificate && (
