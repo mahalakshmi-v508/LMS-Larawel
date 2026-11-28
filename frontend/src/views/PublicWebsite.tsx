@@ -13,7 +13,6 @@ import {
   Phone,
   Play,
   Search,
-  Sparkles,
   Star,
   Trophy,
   Clock3,
@@ -99,23 +98,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
                 <span><strong>95%</strong> Satisfaction Rate</span>
               </div>
             </div>
-            <div className="public-hero-visual" aria-label="Student learning online">
-              <div className="hero-blob"/>
-              <div className="hero-spark spark-one">✦</div>
-              <div className="hero-spark spark-two">✦</div>
-              <div className="student-illustration">
-                <div className="student-hair"/>
-                <div className="student-head"><span className="student-eye left"/><span className="student-eye right"/><span className="student-smile"/></div>
-                <div className="student-body"/>
-                <div className="student-arm left"/>
-                <div className="student-arm right"/>
-                <div className="student-laptop"><span>&lt;/&gt;</span></div>
-                <div className="student-book"/>
-              </div>
-              <div className="floating-icon floating-video"><Play size={22} fill="currentColor"/></div>
-              <div className="floating-icon floating-book"><BookOpenCheck size={25}/></div>
-              <div className="floating-icon floating-award"><Award size={25}/></div>
-              <div className="floating-cap"><span/></div>
+            <div className="public-hero-visual">
+              <img className="public-hero-image" src="/banner-img.jpeg" alt="Student learning online" />
             </div>
           </section>
 
@@ -170,10 +154,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({ page }) => {
 
           <section className="public-success-section">
             <div className="success-illustration">
-              <div className="success-plant left"/>
-              <div className="success-book"/>
-              <div className="success-cap"><span/></div>
-              <div className="success-bulb"><Sparkles size={32}/></div>
+              <img className="success-image" src="/book-img.jpeg" alt="Graduation cap and books representing learning success" />
             </div>
             <div className="success-copy">
               <span>ABOUT EDULEARN</span>
