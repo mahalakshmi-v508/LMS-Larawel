@@ -118,7 +118,44 @@ class AuthController extends ApiController
                 ->first();
 
             if (! $user || ! (int) $user->is_active) {
+                // No account yet? Then the student may simply not have paid.
+                $pending = DB::table('enquiries')
+                    ->whereRaw('LOWER(email) = LOWER(?)', [trim($validated['email'])])
+                    ->whereRaw('LOWER(status) = ?', ['approved'])
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($pending && strtoupper((string) ($pending->payment_status ?: 'UNPAID')) !== 'PAID') {
+                    $amount = $pending->amount !== null
+                        ? '₹'.number_format((float) $pending->amount, 2)
+                        : 'the course fee';
+
+                    throw new ApiException(
+                        "Payment pending: {$amount} has not been paid yet, so your Student ID has not been generated. Open the payment link or QR code in your WhatsApp message, complete the payment, and your Student ID will be sent to WhatsApp immediately.",
+                        402
+                    );
+                }
+
                 throw new ApiException('Student ID or email is incorrect, or the account is inactive.', 401);
+            }
+
+            // Enquiries become students only after the course fee is paid.
+            // Legacy approvals that never had a fee/QR set are left untouched.
+            if (! empty($user->account_id)) {
+                $enquiry = DB::table('enquiries')->where('account_id', $user->account_id)->first();
+                $hasFee = $enquiry && ($enquiry->amount !== null || ! empty($enquiry->qr_token));
+                $isPaid = $enquiry && strtoupper((string) ($enquiry->payment_status ?: 'UNPAID')) === 'PAID';
+
+                if ($hasFee && ! $isPaid) {
+                    $amount = $enquiry->amount !== null
+                        ? '₹'.number_format((float) $enquiry->amount, 2)
+                        : 'your course fee';
+
+                    throw new ApiException(
+                        "Payment pending: {$amount} is not paid yet. Open the QR code or payment link in your WhatsApp message, complete the payment, then sign in.",
+                        402
+                    );
+                }
             }
 
             $student = DB::table('students')->where('user_id', $user->id)->first();

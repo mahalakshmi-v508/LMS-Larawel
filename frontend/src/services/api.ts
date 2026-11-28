@@ -79,8 +79,26 @@ export const api = {
   getStudents: () => request<any[]>('/users'), // filter role STUDENT
   getAdminStudents: () => request<any[]>('/admin/students'),
   getAdminEnquiries: () => request<any[]>('/admin/enquiries'),
-  approveEnquiry: (id: number) => request<{ account_id: string; email: string }>(`/admin/enquiries/${id}/approve`, { method: 'POST' }),
+  approveEnquiry: (id: number, amount?: number) =>
+    request<{ account_id: string; email: string; mobile_number?: string; amount: number; payment_status: string; payment_url?: string; whatsapp_sent?: boolean; mail_sent?: boolean }>(
+      `/admin/enquiries/${id}/approve`,
+      { method: 'POST', body: JSON.stringify({ amount }) }
+    ),
   rejectEnquiry: (id: number) => request(`/admin/enquiries/${id}/reject`, { method: 'POST' }),
+  updateEnquiryAmount: (id: number, amount: number) =>
+    request(`/admin/enquiries/${id}/amount`, { method: 'PUT', body: JSON.stringify({ amount }) }),
+  markEnquiryPaid: (id: number, payment_reference?: string) =>
+    request(`/admin/enquiries/${id}/mark-paid`, { method: 'POST', body: JSON.stringify({ payment_reference }) }),
+  getEnquiryPayment: (token: string) => request<any>(`/enquiries/payment/${encodeURIComponent(token)}`),
+  enquiryQrUrl: (token: string) => `${API_BASE}/enquiries/payment/${encodeURIComponent(token)}/qr`,
+  payEnquiry: (token: string, payment_reference?: string) =>
+    request<{ account_id: string; has_account: boolean; amount: number; payment_status: string; whatsapp_sent?: boolean; mail_sent?: boolean; name?: string; email?: string; mobile_number?: string; course_interest?: string }>(
+      `/enquiries/payment/${encodeURIComponent(token)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ payment_reference }),
+      }
+    ),
   getStudentById: (id: number) => request<any>(`/students/${id}`),
   createStudent: (data: { user_id: number; joining_date: string; certification_status?: string }) =>
     request('/students', { method: 'POST', body: JSON.stringify(data) }),
@@ -185,6 +203,14 @@ export const api = {
   getChatMessages: (chat_room_id: number) => request<any[]>(`/chat-rooms/${chat_room_id}/messages`),
   sendChatMessage: (chat_room_id: number, data: { sender_user_id: number; message: string }) =>
     request(`/chat-rooms/${chat_room_id}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  sendDirectMessage: (data: { sender_user_id: number; recipient_user_id: number; message: string }) =>
+    request('/direct-messages', { method: 'POST', body: JSON.stringify(data) }),
+  getDirectMessages: (user_a: number, user_b: number) =>
+    request<any[]>(`/direct-messages?user_a=${user_a}&user_b=${user_b}`),
+  getDirectConversations: (user_id: number) =>
+    request<any[]>(`/direct-conversations/${user_id}`),
+  getAllDirectConversations: () =>
+    request<any[]>(`/direct-conversations`),
 
   // --- 11. CERTIFICATES ---
   issueCertificate: (data: { student_id: number; batch_id: number; course_completed: boolean }) =>

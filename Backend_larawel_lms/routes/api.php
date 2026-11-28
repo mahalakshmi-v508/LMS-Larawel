@@ -37,9 +37,14 @@ Route::post('auth/student-login', [AuthController::class, 'studentLogin']);
 
 // Public website
 Route::post('enquiries', [EnquiryController::class, 'store']);
+Route::get('enquiries/payment/{token}/qr', [EnquiryController::class, 'qrImage']);
+Route::get('enquiries/payment/{token}', [EnquiryController::class, 'paymentInfo']);
+Route::post('enquiries/payment/{token}', [EnquiryController::class, 'pay']);
 Route::get('admin/enquiries', [EnquiryController::class, 'index']);
 Route::post('admin/enquiries/{id}/approve', [EnquiryController::class, 'approve']);
 Route::post('admin/enquiries/{id}/reject', [EnquiryController::class, 'reject']);
+Route::put('admin/enquiries/{id}/amount', [EnquiryController::class, 'updateAmount']);
+Route::post('admin/enquiries/{id}/mark-paid', [EnquiryController::class, 'markPaid']);
 
 // 2. Users, students and trainers
 Route::get('users', [UserController::class, 'index']);
@@ -111,6 +116,10 @@ Route::get('batches/{id}/chat-room', [ChatController::class, 'show']);
 Route::post('batches/{id}/chat-room', [ChatController::class, 'configure']);
 Route::get('chat-rooms/{id}/messages', [ChatController::class, 'messages']);
 Route::post('chat-rooms/{id}/messages', [ChatController::class, 'storeMessage']);
+Route::post('direct-messages', [ChatController::class, 'storeDirect']);
+Route::get('direct-messages', [ChatController::class, 'directMessages']);
+Route::get('direct-conversations/{userId}', [ChatController::class, 'directConversations']);
+Route::get('direct-conversations', [ChatController::class, 'allDirectConversations']);
 
 // 11. Certificates
 Route::post('certificates', [CertificateController::class, 'issue']);

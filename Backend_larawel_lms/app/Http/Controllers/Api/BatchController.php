@@ -18,7 +18,7 @@ class BatchController extends ApiController
 
         $query = 'SELECT b.id, b.batch_code, b.start_date, b.end_date, b.is_active, b.created_at,
                          c.id AS course_id, c.course_name,
-                         t.trainer_id, u.name AS trainer_name
+                         t.trainer_id, u.id AS trainer_user_id, u.name AS trainer_name
                   FROM batches b
                   INNER JOIN courses c ON b.course_id = c.id
                   INNER JOIN trainers t ON b.trainer_id = t.trainer_id
@@ -105,7 +105,7 @@ class BatchController extends ApiController
         $batch = DB::selectOne(
             'SELECT b.id, b.batch_code, b.start_date, b.end_date, b.is_active, b.created_at,
                     c.id AS course_id, c.course_name, c.duration_days,
-                    t.trainer_id, u.name AS trainer_name, u.mobile_number AS trainer_mobile
+                    t.trainer_id, u.id AS trainer_user_id, u.name AS trainer_name, u.mobile_number AS trainer_mobile
              FROM batches b
              INNER JOIN courses c ON b.course_id = c.id
              INNER JOIN trainers t ON b.trainer_id = t.trainer_id
